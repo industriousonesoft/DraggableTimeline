@@ -682,13 +682,12 @@
             </items>
             <point key="canvasLocation" x="141" y="154"/>
         </menu>
-        <window title="DraggableTimeline" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
+        <window title="DraggableTimeline" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" titlebarAppearsTransparent="YES" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="499" height="352"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <value key="minSize" type="size" width="499" height="352"/>
-            <value key="maxSize" type="size" width="499" height="352"/>
             <view key="contentView" id="EiT-Mj-1SZ">
                 <rect key="frame" x="0.0" y="0.0" width="499" height="352"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -700,7 +699,7 @@
                             <rect key="frame" x="0.0" y="0.0" width="501" height="354"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <view ambiguous="YES" id="tdT-uF-M5B" customClass="FlippedView" customModule="DraggableTimeline" customModuleProvider="target">
+                                <view ambiguous="YES" id="tdT-uF-M5B">
                                     <rect key="frame" x="0.0" y="0.0" width="486" height="339"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </view>

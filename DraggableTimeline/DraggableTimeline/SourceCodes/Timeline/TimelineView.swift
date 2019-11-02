@@ -34,7 +34,7 @@ class TimelineView: NSScrollView {
         }
     }
     
-    var bubbleRadius: CGFloat = 2.0 {
+    var bubbleRadius: CGFloat = 4.0 {
         didSet {
             if bubbleRadius < 0.0 {
                 bubbleRadius = 0.0
@@ -134,6 +134,59 @@ class TimelineView: NSScrollView {
             fatalError("The document view should not be nil")
         }
         
+        var newBoundHeight: CGFloat = 0.0
+        var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.bottom
+        let maxWidth = self.calcWidth()
+        let itemInterval = TimelineView.gap * 2.5
+        let labelInterval: CGFloat = 3.0
+        for i in (0..<self.points.count).reversed() {
+            let item = self.points[i]
+            let titleLabel = self.buildTitleLabel(i)
+            let descriptionLabel = self.buildDescriptionLabel(i)
+            
+            let titleHeight = titleLabel.intrinsicContentSize.height
+            let bubbleHeight = titleHeight + TimelineView.gap
+            let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
+            let height: CGFloat = titleHeight + descriptionHeight
+            let pointX = self.documentView!.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2
+            
+            let maxTitleWidth = maxWidth
+            var titleWidth = titleLabel.intrinsicContentSize.width + 20
+            if titleWidth > maxTitleWidth {
+                titleWidth = maxTitleWidth
+            }
+            
+            let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
+            let bubbleRect = CGRect(
+                x: pointX + self.pointDiameter + self.lineWidth / 2 + offset,
+                y: y + descriptionHeight + labelInterval,
+                width: titleWidth,
+                height: bubbleHeight)
+            
+            var descriptionRect: CGRect?
+            if descriptionHeight > 0 {
+                descriptionRect = CGRect(
+                    x: bubbleRect.origin.x,
+                    y: y,
+                    width: maxWidth,
+                    height: descriptionHeight)
+            }
+            
+            let point = CGPoint(x: pointX, y: bubbleRect.origin.y + bubbleHeight / 2 - self.pointDiameter / 2)
+            
+            self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill))
+            
+            
+            
+            y += height
+            y += itemInterval
+            newBoundHeight += height
+            newBoundHeight += itemInterval
+        }
+        
+        newBoundHeight += self.pointDiameter / 2
+        let newContentSize = CGSize(width: self.documentView!.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: newBoundHeight)
+        self.documentView!.setFrameSize(newContentSize)
     }
     
     private func buildSectionsInFlippedCoordinateSystemView() {
@@ -143,47 +196,50 @@ class TimelineView: NSScrollView {
         }
         
         var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.top
-         let maxWidth = self.calcWidth()
-         for i in 0 ..< self.points.count {
-             let titleLabel = self.buildTitleLabel(i)
-             let descriptionLabel = self.buildDescriptionLabel(i)
-             
-             let titleHeight = titleLabel.intrinsicContentSize.height
-             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
-             let height: CGFloat = titleHeight + descriptionHeight
+        let maxWidth = self.calcWidth()
+        let itemInterval = TimelineView.gap * 2.5
+        let labelInterval: CGFloat = 3.0
+        for i in 0 ..< self.points.count {
+            let item = self.points[i]
+            let titleLabel = self.buildTitleLabel(i)
+            let descriptionLabel = self.buildDescriptionLabel(i)
+            let titleHeight = titleLabel.intrinsicContentSize.height
+            let bubbleHeight = titleHeight + TimelineView.gap
+            let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
+            let height: CGFloat = titleHeight + descriptionHeight
          
-            let point = CGPoint(x: self.documentView!.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2, y: y + (titleHeight + TimelineView.gap) / 2)
+            let point = CGPoint(x: self.documentView!.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2, y: y + bubbleHeight / 2)
              
-             let maxTitleWidth = maxWidth
-             var titleWidth = titleLabel.intrinsicContentSize.width + 20
-             if titleWidth > maxTitleWidth {
-                 titleWidth = maxTitleWidth
+            let maxTitleWidth = maxWidth
+            var titleWidth = titleLabel.intrinsicContentSize.width + 20
+            if titleWidth > maxTitleWidth {
+                titleWidth = maxTitleWidth
+            }
+             
+            let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
+            let bubbleRect = CGRect(
+                x: point.x + self.pointDiameter + self.lineWidth / 2 + offset,
+                y: y + self.pointDiameter / 2,
+                width: titleWidth,
+                height: bubbleHeight)
+             
+            var descriptionRect: CGRect?
+            if descriptionHeight > 0 {
+                descriptionRect = CGRect(
+                    x: bubbleRect.origin.x,
+                    y: bubbleRect.origin.y + bubbleRect.height + labelInterval,
+                    width: maxWidth,
+                    height: descriptionHeight)
              }
+            
+            self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill))
              
-             let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
-             let bubbleRect = CGRect(
-                 x: point.x + self.pointDiameter + self.lineWidth / 2 + offset,
-                 y: y + self.pointDiameter / 2,
-                 width: titleWidth,
-                 height: titleHeight + TimelineView.gap)
-             
-             var descriptionRect: CGRect?
-             if descriptionHeight > 0 {
-                 descriptionRect = CGRect(
-                     x: bubbleRect.origin.x,
-                     y: bubbleRect.origin.y + bubbleRect.height + 3,
-                     width: maxWidth,
-                     height: descriptionHeight)
-             }
-             
-             self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, self.points[i].pointColor.cgColor, self.points[i].lineColor.cgColor, self.points[i].fill))
-             
-             y += height
-             y += TimelineView.gap * 2.2
-    
-         }
+            y += height
+            y += itemInterval
+
+        }
          
-         y += self.pointDiameter / 2
+        y += self.pointDiameter / 2
         let newContentSize = CGSize(width: self.documentView!.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: y)
         self.documentView!.setFrameSize(newContentSize)
     }
@@ -268,7 +324,7 @@ class TimelineView: NSScrollView {
         self.documentView?.layer?.addSublayer(shapeLayer)
         
         let titleLabelHeight: CGFloat = 15.0
-        let titleRect = CGRect(x: rect.origin.x + 10, y: rect.origin.y + (rect.size.height - titleLabelHeight) / 2  , width: rect.size.width - 15, height: titleLabelHeight)
+        let titleRect = CGRect(x: rect.origin.x + 10, y: rect.origin.y + (rect.size.height - titleLabelHeight) / 2  , width: rect.size.width - 10, height: titleLabelHeight)
         titleLabel.textColor = textColor
         titleLabel.frame = titleRect
         self.documentView?.addSubview(titleLabel)
