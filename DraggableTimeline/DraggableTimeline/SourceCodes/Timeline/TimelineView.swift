@@ -61,16 +61,17 @@ class TimelineView: NSScrollView {
             self.documentView?.subviews.forEach { (view) in
                 view.removeFromSuperview()
             }
-            
-//            self.contentSize = CGSize.zero
-            self.documentView?.setFrameSize(.zero)
-            
+   
             self.sections.removeAll()
             self.buildSections()
             
-            layer?.setNeedsDisplay()
-            layer?.displayIfNeeded()
+            self.layer?.setNeedsDisplay()
+            self.layer?.displayIfNeeded()
         }
+    }
+    
+    override func layout() {
+        super.layout()
     }
     
     required override init(frame frameRect: NSRect) {
@@ -119,58 +120,72 @@ class TimelineView: NSScrollView {
     
     private func buildSections() {
         
+        if self.documentView!.isFlipped == false {
+            self.buildSectionsInNonFlippedCoordinateSystemView()
+        }else {
+            self.buildSectionsInFlippedCoordinateSystemView()
+        }
+        
+        self.setNeedsDisplay(self.bounds)
+    }
+    
+    private func buildSectionsInNonFlippedCoordinateSystemView() {
         guard self.documentView != nil else {
             fatalError("The document view should not be nil")
         }
         
-        self.setNeedsDisplay(self.bounds)
-        self.needsLayout = true
-      
-        var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.top
-        let maxWidth = self.calcWidth()
-        for i in 0 ..< self.points.count {
-            let titleLabel = self.buildTitleLabel(i)
-            let descriptionLabel = self.buildDescriptionLabel(i)
-            
-            let titleHeight = titleLabel.intrinsicContentSize.height
-            let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
-            let height: CGFloat = titleHeight + descriptionHeight
-        
-            let point = CGPoint(x: self.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2, y: y + (titleHeight + TimelineView.gap) / 2)
-            
-            let maxTitleWidth = maxWidth
-            var titleWidth = titleLabel.intrinsicContentSize.width + 20
-            if titleWidth > maxTitleWidth {
-                titleWidth = maxTitleWidth
-            }
-            
-            let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
-            let bubbleRect = CGRect(
-                x: point.x + self.pointDiameter + self.lineWidth / 2 + offset,
-                y: y + self.pointDiameter / 2,
-                width: titleWidth,
-                height: titleHeight + TimelineView.gap)
-            
-            var descriptionRect: CGRect?
-            if descriptionHeight > 0 {
-                descriptionRect = CGRect(
-                    x: bubbleRect.origin.x,
-                    y: bubbleRect.origin.y + bubbleRect.height + 3,
-                    width: maxWidth,
-                    height: descriptionHeight)
-            }
-            
-            self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, self.points[i].pointColor.cgColor, self.points[i].lineColor.cgColor, self.points[i].fill))
-            
-            y += height
-            y += TimelineView.gap * 2.2
-   
+    }
+    
+    private func buildSectionsInFlippedCoordinateSystemView() {
+
+        guard self.documentView != nil else {
+            fatalError("The document view should not be nil")
         }
         
-        y += self.pointDiameter / 2
-        let newContentSize = CGSize(width: self.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: y)
+        var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.top
+         let maxWidth = self.calcWidth()
+         for i in 0 ..< self.points.count {
+             let titleLabel = self.buildTitleLabel(i)
+             let descriptionLabel = self.buildDescriptionLabel(i)
+             
+             let titleHeight = titleLabel.intrinsicContentSize.height
+             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
+             let height: CGFloat = titleHeight + descriptionHeight
+         
+            let point = CGPoint(x: self.documentView!.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2, y: y + (titleHeight + TimelineView.gap) / 2)
+             
+             let maxTitleWidth = maxWidth
+             var titleWidth = titleLabel.intrinsicContentSize.width + 20
+             if titleWidth > maxTitleWidth {
+                 titleWidth = maxTitleWidth
+             }
+             
+             let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
+             let bubbleRect = CGRect(
+                 x: point.x + self.pointDiameter + self.lineWidth / 2 + offset,
+                 y: y + self.pointDiameter / 2,
+                 width: titleWidth,
+                 height: titleHeight + TimelineView.gap)
+             
+             var descriptionRect: CGRect?
+             if descriptionHeight > 0 {
+                 descriptionRect = CGRect(
+                     x: bubbleRect.origin.x,
+                     y: bubbleRect.origin.y + bubbleRect.height + 3,
+                     width: maxWidth,
+                     height: descriptionHeight)
+             }
+             
+             self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, self.points[i].pointColor.cgColor, self.points[i].lineColor.cgColor, self.points[i].fill))
+             
+             y += height
+             y += TimelineView.gap * 2.2
+    
+         }
+         
+         y += self.pointDiameter / 2
+        let newContentSize = CGSize(width: self.documentView!.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: y)
         self.documentView!.setFrameSize(newContentSize)
-       
     }
     
     private func buildTitleLabel(_ index: Int) -> NSTextField {
