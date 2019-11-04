@@ -8,11 +8,48 @@
 
 import Cocoa
 
+enum TimelineDisplayType {
+    case left
+    case right
+    case both
+}
+
 private typealias SectionItem = (point: CGPoint, bubbleRect: CGRect, descriptionRect: CGRect?, titleLabel: NSTextField, descriptionLabel: NSTextField?, pointColor: CGColor, lineColor: CGColor, fill: Bool)
 
 class TimelineView: NSScrollView {
     
     private static let gap: CGFloat = 15.0
+    
+    private var sections: [SectionItem] = []
+    
+    var bubbleColor: NSColor = .init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
+        didSet {
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+    }
+    var titleColor: NSColor = .white {
+        didSet {
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+    }
+    var descriptionColor: NSColor = .gray {
+        didSet {
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+    }
+    var hasBubbleArrow: Bool = true {
+        didSet {
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+    }
     
     var pointDiameter: CGFloat = 6.0 {
         didSet {
@@ -20,6 +57,17 @@ class TimelineView: NSScrollView {
                 pointDiameter = 0.0
             }else if pointDiameter > 100.0 {
                 pointDiameter = 100.0
+            }
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+    }
+    
+    var displayType: TimelineDisplayType = .right {
+        didSet {
+            DispatchQueue.main.async {
+                self.refresh()
             }
         }
     }
@@ -31,6 +79,9 @@ class TimelineView: NSScrollView {
             }else if lineWidth > 20.0 {
                 lineWidth = 20.0
             }
+            DispatchQueue.main.async {
+                self.refresh()
+            }
         }
     }
     
@@ -41,32 +92,17 @@ class TimelineView: NSScrollView {
             }else if bubbleRadius > 6.0 {
                 bubbleRadius = 6.0
             }
+            DispatchQueue.main.async {
+                self.refresh()
+            }
         }
     }
     
-    var bubbleColor: NSColor = .init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0)
-    var titleColor: NSColor = .white
-    var descriptionColor: NSColor = .gray
-    var hasBubbleArrow: Bool = true
-    
-    private var sections: [SectionItem] = []
-    
     var points:[TimelinePoint] = [] {
         didSet {
-            self.documentView?.layer?.sublayers?.forEach({ (layer) in
-                if layer.isKind(of: CAShapeLayer.self) {
-                    layer.removeFromSuperlayer()
-                }
-            })
-            self.documentView?.subviews.forEach { (view) in
-                view.removeFromSuperview()
+            DispatchQueue.main.async {
+                self.refresh()
             }
-   
-            self.sections.removeAll()
-            self.buildSections()
-            
-            self.layer?.setNeedsDisplay()
-            self.layer?.displayIfNeeded()
         }
     }
     
@@ -76,16 +112,28 @@ class TimelineView: NSScrollView {
     
     required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.initialize()
+
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        self.initialize()
     }
     
-    private func initialize() {
+    private func refresh() {
+        self.documentView?.layer?.sublayers?.forEach({ (layer) in
+            if layer.isKind(of: CAShapeLayer.self) {
+                layer.removeFromSuperlayer()
+            }
+        })
+        self.documentView?.subviews.forEach { (view) in
+            view.removeFromSuperview()
+        }
         
+        self.sections.removeAll()
+        self.buildSections()
+        
+        self.layer?.setNeedsDisplay()
+        self.layer?.displayIfNeeded()
     }
     
     override func draw(_ dirtyRect: NSRect) {
@@ -135,6 +183,7 @@ class TimelineView: NSScrollView {
         }
         
         var newBoundHeight: CGFloat = 0.0
+        let pointX = self.timelinePointX()!!! FIXME
         var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.bottom
         let maxWidth = self.calcWidth()
         let itemInterval = TimelineView.gap * 2.5
@@ -148,7 +197,6 @@ class TimelineView: NSScrollView {
             let bubbleHeight = titleHeight + TimelineView.gap
             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = titleHeight + descriptionHeight
-            let pointX = self.documentView!.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2
             
             let maxTitleWidth = maxWidth
             var titleWidth = titleLabel.intrinsicContentSize.width + 20
@@ -277,7 +325,19 @@ class TimelineView: NSScrollView {
     }
     
     private func calcWidth() -> CGFloat {
-        return self.bounds.width - (self.contentInsets.left + self.contentInsets.right) - self.pointDiameter - self.lineWidth - TimelineView.gap * 1.5
+        let width = self.bounds.width - (self.contentInsets.left + self.contentInsets.right) - self.pointDiameter - self.lineWidth - TimelineView.gap * 2
+        return self.displayType == .both ? width : width / 2
+    }
+    
+    private func timelinePointX() -> CGFloat {
+        switch self.displayType {
+        case .left:
+            return NSMaxX(self.documentView!.bounds) - self.contentInsets.right - self.lineWidth / 2
+        case .right:
+            return NSMinX(self.documentView!.bounds) + self.contentInsets.left + self.lineWidth / 2
+        case .both:
+            return NSMidX(self.documentView!.bounds) + self.contentInsets.left + self.lineWidth / 2
+        }
     }
     
     func drawLine(_ start: CGPoint, end: CGPoint, color: CGColor) {
