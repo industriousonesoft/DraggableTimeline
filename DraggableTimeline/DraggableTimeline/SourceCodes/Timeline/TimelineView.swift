@@ -51,6 +51,24 @@ class TimelineView: NSScrollView {
         }
     }
     
+    var bubbleArraySize: NSSize = .init(width: 8, height: 16) {
+        didSet {
+            if bubbleArraySize.width < 0.0 {
+                bubbleArraySize.width = 0.0
+            }else if bubbleArraySize.width > 10.0 {
+                bubbleArraySize.width = 10.0
+            }
+            if bubbleArraySize.height < 0.0 {
+                bubbleArraySize.height = 0.0
+            }else if bubbleArraySize.height > 10.0 {
+                bubbleArraySize.height = 10.0
+            }
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+    }
+    
     var pointDiameter: CGFloat = 6.0 {
         didSet {
             if pointDiameter < 0.0 {
@@ -183,7 +201,7 @@ class TimelineView: NSScrollView {
         }
         
         var newBoundHeight: CGFloat = 0.0
-        let pointX = self.timelinePointX()!!! FIXME
+        let pointX = self.timelinePointX()
         var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.bottom
         let maxWidth = self.calcWidth()
         let itemInterval = TimelineView.gap * 2.5
@@ -223,8 +241,6 @@ class TimelineView: NSScrollView {
             let point = CGPoint(x: pointX, y: bubbleRect.origin.y + bubbleHeight / 2 - self.pointDiameter / 2)
             
             self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill))
-            
-            
             
             y += height
             y += itemInterval
@@ -326,7 +342,7 @@ class TimelineView: NSScrollView {
     
     private func calcWidth() -> CGFloat {
         let width = self.bounds.width - (self.contentInsets.left + self.contentInsets.right) - self.pointDiameter - self.lineWidth - TimelineView.gap * 2
-        return self.displayType == .both ? width : width / 2
+        return self.displayType == .both ? width / 2 : width
     }
     
     private func timelinePointX() -> CGFloat {
@@ -369,14 +385,13 @@ class TimelineView: NSScrollView {
         let path = CGMutablePath.init()
         path.addRoundedRect(in: rect, cornerWidth: self.bubbleRadius, cornerHeight: self.bubbleRadius)
     
-        if self.hasBubbleArrow {
-            let startPont = CGPoint(x: rect.origin.x, y: rect.origin.y + rect.height / 2.0 - 8)
+        if self.hasBubbleArrow && self.bubbleArraySize != .zero {
+            let startPont = CGPoint(x: rect.origin.x, y: rect.origin.y + (rect.height - self.bubbleArraySize.height) / 2.0 )
             path.move(to: startPont)
-            path.addLine(to: startPont)
-            path.addLine(to: CGPoint(x: rect.origin.x - 8, y: rect.origin.y + rect.height / 2))
-            path.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.height / 2 + 8))
+            path.addLine(to: CGPoint(x: rect.origin.x - self.bubbleArraySize.width, y: rect.origin.y + rect.height / 2))
+            path.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + (rect.height + self.bubbleArraySize.height) / 2))
         }
-        
+       
         let shapeLayer = CAShapeLayer()
         shapeLayer.path = path
         shapeLayer.fillColor = backgroundColor.cgColor
