@@ -685,22 +685,22 @@
         <window title="DraggableTimeline" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" titlebarAppearsTransparent="YES" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="335" y="390" width="499" height="352"/>
+            <rect key="contentRect" x="335" y="390" width="534" height="352"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
-            <value key="minSize" type="size" width="499" height="352"/>
+            <value key="minSize" type="size" width="534" height="352"/>
             <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="499" height="352"/>
+                <rect key="frame" x="0.0" y="0.0" width="534" height="352"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <scrollView fixedFrame="YES" borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" hasVerticalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3gc-uo-xqA" customClass="TimelineView" customModule="DraggableTimeline" customModuleProvider="target">
-                        <rect key="frame" x="-1" y="-1" width="501" height="354"/>
+                        <rect key="frame" x="-1" y="-1" width="536" height="354"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" ambiguous="YES" copiesOnScroll="NO" id="2Ph-Qh-S34">
-                            <rect key="frame" x="0.0" y="0.0" width="501" height="354"/>
+                            <rect key="frame" x="0.0" y="0.0" width="536" height="354"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <view ambiguous="YES" id="tdT-uF-M5B">
-                                    <rect key="frame" x="0.0" y="0.0" width="486" height="339"/>
+                                <view ambiguous="YES" id="tdT-uF-M5B" customClass="FlippedView" customModule="DraggableTimeline" customModuleProvider="target">
+                                    <rect key="frame" x="0.0" y="0.0" width="521" height="339"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </view>
                             </subviews>
@@ -717,7 +717,7 @@
                     </scrollView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="148.5" y="-232"/>
+            <point key="canvasLocation" x="166" y="-232"/>
         </window>
     </objects>
 </document>
