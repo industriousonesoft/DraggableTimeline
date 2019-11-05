@@ -16,11 +16,19 @@ enum TimelineDisplayType {
 
 private typealias SectionItem = (point: CGPoint, bubbleRect: CGRect, descriptionRect: CGRect?, titleLabel: NSTextField, descriptionLabel: NSTextField?, pointColor: CGColor, lineColor: CGColor, fill: Bool, onRight: Bool)
 
-class TimelineView: NSScrollView {
+class TimelineView: NSView {
     
     private static let gap: CGFloat = 15.0
     
     private var sections: [SectionItem] = []
+    
+    var contentInsets: NSEdgeInsets = .init(top: 0, left: 0, bottom: 0, right: 0) {
+        didSet {
+            DispatchQueue.main.async {
+                self.refresh()
+            }
+        }
+    }
     
     var bubbleColor: NSColor = .init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
         didSet {
@@ -138,12 +146,12 @@ class TimelineView: NSScrollView {
     }
     
     private func refresh() {
-        self.documentView?.layer?.sublayers?.forEach({ (layer) in
+        self.layer?.sublayers?.forEach({ (layer) in
             if layer.isKind(of: CAShapeLayer.self) {
                 layer.removeFromSuperlayer()
             }
         })
-        self.documentView?.subviews.forEach { (view) in
+        self.subviews.forEach { (view) in
             view.removeFromSuperview()
         }
         
@@ -162,11 +170,11 @@ class TimelineView: NSScrollView {
     private func timelinePointX() -> CGFloat {
         switch self.displayType {
         case .left:
-            return NSMaxX(self.documentView!.bounds) - self.contentInsets.right - self.lineWidth / 2
+            return NSMaxX(self.bounds) - self.contentInsets.right - self.lineWidth / 2
         case .right:
-            return NSMinX(self.documentView!.bounds) + self.contentInsets.left + self.lineWidth / 2
+            return NSMinX(self.bounds) + self.contentInsets.left + self.lineWidth / 2
         case .both:
-            return (NSWidth(self.documentView!.bounds) - self.contentInsets.left - self.contentInsets.right) / 2.0 - self.lineWidth / 2
+            return (NSWidth(self.bounds) - self.contentInsets.left - self.contentInsets.right) / 2.0 - self.lineWidth / 2
         }
     }
     
@@ -180,7 +188,7 @@ class TimelineView: NSScrollView {
     
     private func buildSections() {
         
-        if self.documentView!.isFlipped == false {
+        if self.isFlipped == false {
             self.buildSectionsInNonFlippedCoordinateSystemView()
         }else {
             self.buildSectionsInFlippedCoordinateSystemView()
@@ -190,13 +198,10 @@ class TimelineView: NSScrollView {
     }
     
     private func buildSectionsInNonFlippedCoordinateSystemView() {
-        guard self.documentView != nil else {
-            fatalError("The document view should not be nil")
-        }
-        
+       
         var newBoundHeight: CGFloat = 0.0
         let pointX = self.timelinePointX()
-        var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.bottom
+        var y: CGFloat = self.bounds.origin.y + self.contentInsets.bottom
         let maxWidth = self.calcWidth()
         let itemInterval = TimelineView.gap * 2.5
         let labelInterval: CGFloat = 3.0
@@ -249,17 +254,13 @@ class TimelineView: NSScrollView {
         }
         
         newBoundHeight += self.pointDiameter / 2
-        let newContentSize = CGSize(width: self.documentView!.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: newBoundHeight)
-        self.documentView!.setFrameSize(newContentSize)
+        let newContentSize = CGSize(width: self.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: newBoundHeight)
+        self.setFrameSize(newContentSize)
     }
     
     private func buildSectionsInFlippedCoordinateSystemView() {
 
-        guard self.documentView != nil else {
-            fatalError("The document view should not be nil")
-        }
-        
-        var y: CGFloat = self.documentView!.bounds.origin.y + self.contentInsets.top
+        var y: CGFloat = self.bounds.origin.y + self.contentInsets.top
         let maxWidth = self.calcWidth()
         let itemInterval = TimelineView.gap * 2.5
         let labelInterval: CGFloat = 3.0
@@ -272,7 +273,7 @@ class TimelineView: NSScrollView {
             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = titleHeight + descriptionHeight
          
-            let point = CGPoint(x: self.documentView!.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2, y: y + bubbleHeight / 2)
+            let point = CGPoint(x: self.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2, y: y + bubbleHeight / 2)
              
             let maxTitleWidth = maxWidth
             var titleWidth = titleLabel.intrinsicContentSize.width + 20
@@ -304,8 +305,8 @@ class TimelineView: NSScrollView {
         }
          
         y += self.pointDiameter / 2
-        let newContentSize = CGSize(width: self.documentView!.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: y)
-        self.documentView!.setFrameSize(newContentSize)
+        let newContentSize = CGSize(width: self.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: y)
+        self.setFrameSize(newContentSize)
     }
     
     private func buildTitleLabel(_ index: Int) -> NSTextField {
@@ -380,7 +381,7 @@ class TimelineView: NSScrollView {
         shapeLayer.strokeColor = color
         shapeLayer.lineWidth = self.lineWidth
         
-        self.documentView?.layer?.addSublayer(shapeLayer)
+        self.layer?.addSublayer(shapeLayer)
     }
     
     private func drawPoint(_ point: CGPoint, color: CGColor, fill: Bool) {
@@ -392,7 +393,7 @@ class TimelineView: NSScrollView {
         shapeLayer.fillColor = fill ? color : .clear
         shapeLayer.lineWidth = self.lineWidth
         
-        self.documentView?.layer?.addSublayer(shapeLayer)
+        self.layer?.addSublayer(shapeLayer)
     }
     
     private func drawBubble(_ rect: CGRect, backgroundColor: NSColor, textColor: NSColor, titleLabel: NSTextField, onRight: Bool) {
@@ -412,20 +413,20 @@ class TimelineView: NSScrollView {
         shapeLayer.path = path
         shapeLayer.fillColor = backgroundColor.cgColor
         
-        self.documentView?.layer?.addSublayer(shapeLayer)
+        self.layer?.addSublayer(shapeLayer)
         
         let titleLabelHeight: CGFloat = 15.0
         let titleRect = CGRect(x: rect.origin.x + 10, y: rect.origin.y + (rect.size.height - titleLabelHeight) / 2  , width: rect.size.width - 10, height: titleLabelHeight)
         titleLabel.textColor = textColor
         titleLabel.frame = titleRect
-        self.documentView?.addSubview(titleLabel)
+        self.addSubview(titleLabel)
         
     }
     
     private func drawDescription(_ rect: CGRect, textColor: NSColor, descriptionLabel: NSTextField) {
         descriptionLabel.textColor = textColor
         descriptionLabel.frame = CGRect(x: rect.origin.x + 7, y: rect.origin.y, width: rect.width - 10, height: rect.height)
-        self.documentView?.addSubview(descriptionLabel)
+        self.addSubview(descriptionLabel)
     }
 }
 
