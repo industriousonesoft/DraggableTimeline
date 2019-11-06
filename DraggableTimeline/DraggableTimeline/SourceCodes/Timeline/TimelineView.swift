@@ -127,9 +127,9 @@ class TimelineView: NSView {
     
     var points:[TimelinePoint] = [] {
         didSet {
-//            DispatchQueue.main.async {
-//                self.refresh()
-//            }
+            DispatchQueue.main.async {
+                self.rebuild()
+            }
         }
     }
     
@@ -171,6 +171,13 @@ class TimelineView: NSView {
     }
     
     private func refresh() {
+        self.updateSections()
+        
+        self.layer?.setNeedsDisplay()
+        self.layer?.displayIfNeeded()
+    }
+    
+    private func rebuild() {
         self.layer?.sublayers?.forEach({ (layer) in
             if layer.isKind(of: CAShapeLayer.self) {
                 layer.removeFromSuperlayer()
@@ -181,7 +188,7 @@ class TimelineView: NSView {
         }
         
         self.sections.removeAll()
-        self.buildSections()
+        self.updateSections()
         
         self.layer?.setNeedsDisplay()
         self.layer?.displayIfNeeded()
@@ -211,26 +218,27 @@ class TimelineView: NSView {
         }
     }
     
-    private func buildSections() {
+    private func updateSections() {
         
         if self.isFlipped == false {
-            self.buildSectionsInNonFlippedCoordinateSystemView()
+            self.updateSectionsInNonFlippedCoordinateSystemView()
         }else {
-            self.buildSectionsInFlippedCoordinateSystemView()
+            self.updateSectionsInFlippedCoordinateSystemView()
         }
         
         self.setNeedsDisplay(self.bounds)
     }
     
-    private func buildSectionsInNonFlippedCoordinateSystemView() {
+    private func updateSectionsInNonFlippedCoordinateSystemView() {
        
-//        var newBoundHeight: CGFloat = 0.0
         let pointX = self.timelinePointX()
-        var y: CGFloat = self.bounds.height - self.contentInsets.top - 50.0
+        let maxY: CGFloat = self.bounds.height - self.contentInsets.top
+        let y: CGFloat = self.mouseDraggedPoint.y
         let maxWidth = self.calcWidth()
         let itemInterval = TimelineView.gap * 2.5
         let labelInterval: CGFloat = 3.0
-        for i in (0..<self.points.count) {
+        var contentHeight: CGFloat = 0.0
+        for i in (0..<self.points.count).reversed() {
             
             let item = self.points[i]
             let titleLabel = self.buildTitleLabel(i)
@@ -241,7 +249,7 @@ class TimelineView: NSView {
             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = titleHeight + descriptionHeight
             
-            if self.mouseDraggedPoint.y > y + height {
+            if maxY - y < contentHeight + height {
                 break
             }
             
@@ -255,10 +263,13 @@ class TimelineView: NSView {
             let onRight: Bool = self.isOnRightSide(i)
             
             let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - titleWidth - offset - self.pointDiameter
+            let bubbltPointY = y + contentHeight + descriptionHeight + labelInterval
+        
+            let point = CGPoint(x: pointX, y: bubbltPointY + bubbleHeight / 2 - self.pointDiameter / 2)
             
             let bubbleRect = CGRect(
                 x: bubblePointX,
-                y: y + descriptionHeight + labelInterval,
+                y: bubbltPointY,
                 width: titleWidth,
                 height: bubbleHeight)
             
@@ -267,30 +278,23 @@ class TimelineView: NSView {
             if descriptionHeight > 0 {
                 descriptionRect = CGRect(
                     x: desPointX,
-                    y: y,
+                    y: y + contentHeight,
                     width: maxWidth,
                     height: descriptionHeight)
             }
             
-            let point = CGPoint(x: pointX, y: bubbleRect.origin.y + bubbleHeight / 2 - self.pointDiameter / 2)
-            
             descriptionLabel?.alignment = onRight ? .left : .right
             self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: onRight))
             
-            y -= height
-            y -= itemInterval
+            contentHeight += height
+            contentHeight += itemInterval
+            contentHeight += labelInterval
             
-//            print("y : \(y) => mousePoint.y : \(self.mouseDraggedPoint.y)")
-//            newBoundHeight += height
-//            newBoundHeight += itemInterval
         }
         
-//        newBoundHeight += self.pointDiameter / 2
-//        let newContentSize = CGSize(width: self.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: newBoundHeight)
-//        self.setFrameSize(newContentSize)
     }
     
-    private func buildSectionsInFlippedCoordinateSystemView() {
+    private func updateSectionsInFlippedCoordinateSystemView() {
 
         var y: CGFloat = self.bounds.origin.y + self.contentInsets.top
         let maxWidth = self.calcWidth()
@@ -380,8 +384,9 @@ class TimelineView: NSView {
             if self.sections.count > 0 {
                 
                 let firstItem = self.sections[0]
-                let start: NSPoint = .init(x: firstItem.point.x + self.pointDiameter / 2, y: self.mouseStartPoint.y)
-                let end: NSPoint = .init(x: start.x, y: self.mouseDraggedPoint.y)
+                let start: NSPoint = .init(x: firstItem.point.x + self.pointDiameter / 2, y: self.mouseDraggedPoint.y)
+                let endY = self.bounds.height - self.contentInsets.top //self.mouseStartPoint.y
+                let end: NSPoint = .init(x: start.x, y: endY)
                 
                 self.drawLine(start, end: end, color: NSColor.green.cgColor)
                 
@@ -548,7 +553,7 @@ extension TimelineView: NSAnimationDelegate {
         if keyPath == "currentProgress", let progress = change?[.newKey] as? NSAnimation.Progress {
             let currentPointY = self.mouseStartPoint.y - (self.mouseStartPoint.y - self.mouseEndPoint.y) * CGFloat(1 - progress)
             self.mouseDraggedPoint = .init(x: self.mouseStartPoint.x, y: currentPointY)
-            print("currentPointY => \(currentPointY)")
+//            print("currentPointY => \(currentPointY)")
         }
     }
     
