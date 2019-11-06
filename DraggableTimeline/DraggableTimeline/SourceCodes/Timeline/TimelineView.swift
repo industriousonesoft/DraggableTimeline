@@ -188,7 +188,7 @@ class TimelineView: NSView {
         }
         
         self.sections.removeAll()
-        self.updateSections()
+        self.buildSections()
         
         self.layer?.setNeedsDisplay()
         self.layer?.displayIfNeeded()
@@ -218,6 +218,20 @@ class TimelineView: NSView {
         }
     }
     
+    private func buildSections() {
+        for i in (0..<self.points.count) {
+            let item = self.points[i]
+            let titleLabel = self.buildTitleLabel(i)
+            let descriptionLabel = self.buildDescriptionLabel(i)
+            
+            let onRight: Bool = self.isOnRightSide(i)
+            
+            descriptionLabel?.alignment = onRight ? .left : .right
+            
+            self.sections.append((NSZeroPoint, NSZeroRect, NSZeroRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: onRight))
+        }
+    }
+    
     private func updateSections() {
         
         if self.isFlipped == false {
@@ -238,15 +252,12 @@ class TimelineView: NSView {
         let itemInterval = TimelineView.gap * 2.5
         let labelInterval: CGFloat = 3.0
         var contentHeight: CGFloat = 0.0
-        for i in (0..<self.points.count).reversed() {
+        for i in (0..<self.sections.count).reversed() {
             
-            let item = self.points[i]
-            let titleLabel = self.buildTitleLabel(i)
-            let descriptionLabel = self.buildDescriptionLabel(i)
-            
-            let titleHeight = titleLabel.intrinsicContentSize.height
+            var item = self.sections[i]
+            let titleHeight = item.titleLabel.intrinsicContentSize.height
             let bubbleHeight = titleHeight + TimelineView.gap
-            let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
+            let descriptionHeight = item.descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = titleHeight + descriptionHeight
             
             if maxY - y < contentHeight + height {
@@ -254,13 +265,13 @@ class TimelineView: NSView {
             }
             
             let maxTitleWidth = maxWidth
-            var titleWidth = titleLabel.intrinsicContentSize.width + 20
+            var titleWidth = item.titleLabel.intrinsicContentSize.width + 20
             if titleWidth > maxTitleWidth {
                 titleWidth = maxTitleWidth
             }
             
             let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
-            let onRight: Bool = self.isOnRightSide(i)
+            let onRight: Bool = item.onRight
             
             let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - titleWidth - offset - self.pointDiameter
             let bubbltPointY = y + contentHeight + descriptionHeight + labelInterval
@@ -283,9 +294,10 @@ class TimelineView: NSView {
                     height: descriptionHeight)
             }
             
-            descriptionLabel?.alignment = onRight ? .left : .right
-            self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: onRight))
-            
+            item.point = point
+            item.bubbleRect = bubbleRect
+            item.descriptionRect = descriptionRect
+   
             contentHeight += height
             contentHeight += itemInterval
             contentHeight += labelInterval
