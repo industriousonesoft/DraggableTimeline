@@ -14,14 +14,40 @@ enum TimelineDisplayType {
     case both
 }
 
-private typealias SectionItem = (point: CGPoint, bubbleRect: CGRect, descriptionRect: CGRect?, titleLabel: NSTextField, descriptionLabel: NSTextField?, pointColor: CGColor, lineColor: CGColor, fill: Bool, onRight: Bool)
+private class TimelineSection: NSObject {
+    
+    var point: CGPoint
+    var bubbleRect: CGRect
+    var descriptionRect: CGRect?
+    var titleLabel: NSTextField
+    var descriptionLabel: NSTextField?
+    var pointColor: CGColor
+    var lineColor: CGColor
+    var fill: Bool
+    var onRight: Bool
+    
+    init(point: CGPoint, bubbleRect: CGRect, descriptionRect: CGRect?, titleLabel: NSTextField, descriptionLabel: NSTextField?, pointColor: CGColor, lineColor: CGColor, fill: Bool, onRight: Bool) {
+        self.point = point
+        self.bubbleRect = bubbleRect
+        self.descriptionRect = descriptionRect
+        self.titleLabel = titleLabel
+        self.descriptionLabel = descriptionLabel
+        self.pointColor = pointColor
+        self.lineColor = lineColor
+        self.fill = fill
+        self.onRight = onRight
+    }
+    
+}
+
+private typealias SectionTuple = (point: CGPoint, bubbleRect: CGRect, descriptionRect: CGRect?, titleLabel: NSTextField, descriptionLabel: NSTextField?, pointColor: CGColor, lineColor: CGColor, fill: Bool, onRight: Bool)
 
 class TimelineView: NSView {
     
     private var animation: NSAnimation? = nil
     private static let gap: CGFloat = 15.0
     
-    private var sections: [SectionItem] = []
+    private var sections: [SectionTuple] = []
     
     var contentInsets: NSEdgeInsets = .init(top: 0, left: 0, bottom: 0, right: 0) {
         didSet {
@@ -33,48 +59,48 @@ class TimelineView: NSView {
     
     var bubbleColor: NSColor = .init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
         didSet {
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     var titleColor: NSColor = .white {
         didSet {
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     var descriptionColor: NSColor = .gray {
         didSet {
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     var hasBubbleArrow: Bool = true {
         didSet {
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
-    var bubbleArraySize: NSSize = .init(width: 8, height: 16) {
+    var bubbleArrowSize: NSSize = .init(width: 8, height: 16) {
         didSet {
-            if bubbleArraySize.width < 0.0 {
-                bubbleArraySize.width = 0.0
-            }else if bubbleArraySize.width > 10.0 {
-                bubbleArraySize.width = 10.0
+            if bubbleArrowSize.width < 0.0 {
+                bubbleArrowSize.width = 0.0
+            }else if bubbleArrowSize.width > 10.0 {
+                bubbleArrowSize.width = 10.0
             }
-            if bubbleArraySize.height < 0.0 {
-                bubbleArraySize.height = 0.0
-            }else if bubbleArraySize.height > 10.0 {
-                bubbleArraySize.height = 10.0
+            if bubbleArrowSize.height < 0.0 {
+                bubbleArrowSize.height = 0.0
+            }else if bubbleArrowSize.height > 10.0 {
+                bubbleArrowSize.height = 10.0
             }
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
@@ -85,17 +111,17 @@ class TimelineView: NSView {
             }else if pointDiameter > 100.0 {
                 pointDiameter = 100.0
             }
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
     var displayType: TimelineDisplayType = .both {
         didSet {
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
@@ -106,9 +132,9 @@ class TimelineView: NSView {
             }else if lineWidth > 20.0 {
                 lineWidth = 20.0
             }
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
@@ -119,9 +145,9 @@ class TimelineView: NSView {
             }else if bubbleRadius > 6.0 {
                 bubbleRadius = 6.0
             }
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
@@ -135,17 +161,17 @@ class TimelineView: NSView {
     
     var mouseStartPoint: NSPoint = NSZeroPoint {
         didSet {
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
     var mouseEndPoint: NSPoint = NSZeroPoint {
         didSet {
-            DispatchQueue.main.async {
-                self.refresh()
-            }
+//            DispatchQueue.main.async {
+//                self.refresh()
+//            }
         }
     }
     
@@ -171,13 +197,7 @@ class TimelineView: NSView {
     }
     
     private func refresh() {
-        self.updateSections()
         
-        self.layer?.setNeedsDisplay()
-        self.layer?.displayIfNeeded()
-    }
-    
-    private func rebuild() {
         self.layer?.sublayers?.forEach({ (layer) in
             if layer.isKind(of: CAShapeLayer.self) {
                 layer.removeFromSuperlayer()
@@ -187,11 +207,18 @@ class TimelineView: NSView {
             view.removeFromSuperview()
         }
         
-        self.sections.removeAll()
-        self.buildSections()
+        self.updateSections()
         
         self.layer?.setNeedsDisplay()
         self.layer?.displayIfNeeded()
+        self.setNeedsDisplay(self.bounds)
+    }
+    
+    private func rebuild() {
+        
+        self.sections.removeAll()
+        self.buildSections()
+  
     }
     
     private func calcWidth() -> CGFloat {
@@ -199,7 +226,7 @@ class TimelineView: NSView {
         return self.displayType == .both ? width / 2 : width
     }
     
-    private func timelinePointX() -> CGFloat {
+    private func pointX() -> CGFloat {
         switch self.displayType {
         case .left:
             return NSMaxX(self.bounds) - self.contentInsets.right - self.lineWidth / 2
@@ -208,6 +235,10 @@ class TimelineView: NSView {
         case .both:
             return (NSWidth(self.bounds) - self.contentInsets.left - self.contentInsets.right) / 2.0 - self.lineWidth / 2
         }
+    }
+    
+    private func maxY() -> CGFloat {
+        return self.bounds.height - self.contentInsets.top //self.mouseStartPoint.y
     }
     
     private func isOnRightSide(_ index: Int) -> Bool {
@@ -228,7 +259,7 @@ class TimelineView: NSView {
             
             descriptionLabel?.alignment = onRight ? .left : .right
             
-            self.sections.append((NSZeroPoint, NSZeroRect, NSZeroRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: onRight))
+            self.sections.append((.zero, .zero, .zero, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: onRight))
         }
     }
     
@@ -239,13 +270,11 @@ class TimelineView: NSView {
         }else {
             self.updateSectionsInFlippedCoordinateSystemView()
         }
-        
-        self.setNeedsDisplay(self.bounds)
     }
     
     private func updateSectionsInNonFlippedCoordinateSystemView() {
        
-        let pointX = self.timelinePointX()
+        let pointX = self.pointX()
         let maxY: CGFloat = self.bounds.height - self.contentInsets.top
         let y: CGFloat = self.mouseDraggedPoint.y
         let maxWidth = self.calcWidth()
@@ -254,24 +283,27 @@ class TimelineView: NSView {
         var contentHeight: CGFloat = 0.0
         for i in (0..<self.sections.count).reversed() {
             
-            var item = self.sections[i]
-            let titleHeight = item.titleLabel.intrinsicContentSize.height
+            let section = self.sections[i]
+            let titleHeight = section.titleLabel.intrinsicContentSize.height
             let bubbleHeight = titleHeight + TimelineView.gap
-            let descriptionHeight = item.descriptionLabel?.intrinsicContentSize.height ?? 0
+            let descriptionHeight = section.descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = titleHeight + descriptionHeight
             
             if maxY - y < contentHeight + height {
+                self.sections[i].point = .zero
+                self.sections[i].bubbleRect = .zero
+                self.sections[i].descriptionRect = .zero
                 break
             }
             
             let maxTitleWidth = maxWidth
-            var titleWidth = item.titleLabel.intrinsicContentSize.width + 20
+            var titleWidth = section.titleLabel.intrinsicContentSize.width + 20
             if titleWidth > maxTitleWidth {
                 titleWidth = maxTitleWidth
             }
             
             let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
-            let onRight: Bool = item.onRight
+            let onRight: Bool = section.onRight
             
             let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - titleWidth - offset - self.pointDiameter
             let bubbltPointY = y + contentHeight + descriptionHeight + labelInterval
@@ -294,9 +326,9 @@ class TimelineView: NSView {
                     height: descriptionHeight)
             }
             
-            item.point = point
-            item.bubbleRect = bubbleRect
-            item.descriptionRect = descriptionRect
+            self.sections[i].point = point
+            self.sections[i].bubbleRect = bubbleRect
+            self.sections[i].descriptionRect = descriptionRect
    
             contentHeight += height
             contentHeight += itemInterval
@@ -395,26 +427,27 @@ class TimelineView: NSView {
             
             if self.sections.count > 0 {
                 
-                let firstItem = self.sections[0]
-                let start: NSPoint = .init(x: firstItem.point.x + self.pointDiameter / 2, y: self.mouseDraggedPoint.y)
-                let endY = self.bounds.height - self.contentInsets.top //self.mouseStartPoint.y
+                let start: NSPoint = .init(x: self.pointX() + self.pointDiameter / 2, y: self.mouseDraggedPoint.y)
+                let endY = self.maxY()
                 let end: NSPoint = .init(x: start.x, y: endY)
                 
                 self.drawLine(start, end: end, color: NSColor.green.cgColor)
                 
-                for i in 0 ..< self.sections.count {
+                self.sections.forEach { (section) in
                     
-                    let item = self.sections[i]
-                    
-                    self.drawPoint(item.point, color: item.pointColor, fill: item.fill)
-                    self.drawBubble(item.bubbleRect, backgroundColor: self.bubbleColor, textColor: self.titleColor, titleLabel: item.titleLabel, onRight: item.onRight)
-                    
-                    if let descriptionLabel = item.descriptionLabel,
-                        let descriptionRect = item.descriptionRect {
-                        self.drawDescription(descriptionRect, textColor: self.descriptionColor, descriptionLabel: descriptionLabel)
+                    if section.bubbleRect != .zero && section.point != .zero {
+                        
+                        self.drawPoint(section.point, color: section.pointColor, fill: section.fill)
+                        self.drawBubble(section.bubbleRect, backgroundColor: self.bubbleColor, textColor: self.titleColor, titleLabel: section.titleLabel, onRight: section.onRight)
+
+                        if let descriptionLabel = section.descriptionLabel,
+                            let descriptionRect = section.descriptionRect {
+                            self.drawDescription(descriptionRect, textColor: self.descriptionColor, descriptionLabel: descriptionLabel)
+                        }
                     }
                     
                 }
+
             }
         }
         
@@ -450,13 +483,13 @@ class TimelineView: NSView {
         let path = CGMutablePath.init()
         path.addRoundedRect(in: rect, cornerWidth: self.bubbleRadius, cornerHeight: self.bubbleRadius)
     
-        if self.hasBubbleArrow && self.bubbleArraySize != .zero {
+        if self.hasBubbleArrow && self.bubbleArrowSize != .zero {
             let pointX = onRight ? NSMinX(rect) : NSMaxX(rect)
-            let arrowPointX = onRight ? pointX - self.bubbleArraySize.width : pointX + self.bubbleArraySize.width
-            let startPont = CGPoint(x: pointX , y: rect.origin.y + (rect.height - self.bubbleArraySize.height) / 2.0 )
+            let arrowPointX = onRight ? pointX - self.bubbleArrowSize.width : pointX + self.bubbleArrowSize.width
+            let startPont = CGPoint(x: pointX , y: rect.origin.y + (rect.height - self.bubbleArrowSize.height) / 2.0 )
             path.move(to: startPont)
             path.addLine(to: CGPoint(x: arrowPointX, y: rect.origin.y + rect.height / 2))
-            path.addLine(to: CGPoint(x: pointX, y: rect.origin.y + (rect.height + self.bubbleArraySize.height) / 2))
+            path.addLine(to: CGPoint(x: pointX, y: rect.origin.y + (rect.height + self.bubbleArrowSize.height) / 2))
             path.closeSubpath()
         }
        
@@ -563,7 +596,7 @@ extension TimelineView: NSAnimationDelegate {
     
     @objc override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "currentProgress", let progress = change?[.newKey] as? NSAnimation.Progress {
-            let currentPointY = self.mouseStartPoint.y - (self.mouseStartPoint.y - self.mouseEndPoint.y) * CGFloat(1 - progress)
+            let currentPointY = self.maxY() - (self.mouseStartPoint.y - self.mouseEndPoint.y) * CGFloat(1 - progress)
             self.mouseDraggedPoint = .init(x: self.mouseStartPoint.x, y: currentPointY)
 //            print("currentPointY => \(currentPointY)")
         }
