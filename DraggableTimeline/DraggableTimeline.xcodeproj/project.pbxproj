@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		909B10BC2375528000EA7B67 /* DraggingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909B10BB2375528000EA7B67 /* DraggingView.swift */; };
+		909B10BE2375534E00EA7B67 /* DraggingTacker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909B10BD2375534E00EA7B67 /* DraggingTacker.swift */; };
 		909D03D6236D247600EB41A4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909D03D5236D247600EB41A4 /* AppDelegate.swift */; };
 		909D03D8236D24AF00EB41A4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 909D03D7236D24AF00EB41A4 /* Assets.xcassets */; };
 		909D03DB236D24AF00EB41A4 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 909D03D9236D24AF00EB41A4 /* MainMenu.xib */; };
@@ -16,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		909B10BB2375528000EA7B67 /* DraggingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggingView.swift; sourceTree = "<group>"; };
+		909B10BD2375534E00EA7B67 /* DraggingTacker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggingTacker.swift; sourceTree = "<group>"; };
 		909D03D2236D247600EB41A4 /* DraggableTimeline.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DraggableTimeline.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		909D03D5236D247600EB41A4 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		909D03D7236D24AF00EB41A4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -38,6 +42,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		909B10BA237551BC00EA7B67 /* Dragging */ = {
+			isa = PBXGroup;
+			children = (
+				909B10BB2375528000EA7B67 /* DraggingView.swift */,
+				909B10BD2375534E00EA7B67 /* DraggingTacker.swift */,
+			);
+			path = Dragging;
+			sourceTree = "<group>";
+		};
 		909D03C9236D247600EB41A4 = {
 			isa = PBXGroup;
 			children = (
@@ -70,6 +83,7 @@
 		909D03E3236D25F700EB41A4 /* SourceCodes */ = {
 			isa = PBXGroup;
 			children = (
+				909B10BA237551BC00EA7B67 /* Dragging */,
 				909D03E4236D260100EB41A4 /* Timeline */,
 			);
 			path = SourceCodes;
@@ -78,9 +92,9 @@
 		909D03E4236D260100EB41A4 /* Timeline */ = {
 			isa = PBXGroup;
 			children = (
+				909D03EA236D81E800EB41A4 /* FlippedView.swift */,
 				909D03E5236D27C000EB41A4 /* TimelinePoint.swift */,
 				909D03E7236D293E00EB41A4 /* TimelineView.swift */,
-				909D03EA236D81E800EB41A4 /* FlippedView.swift */,
 			);
 			path = Timeline;
 			sourceTree = "<group>";
@@ -158,6 +172,8 @@
 				909D03D6236D247600EB41A4 /* AppDelegate.swift in Sources */,
 				909D03E8236D293E00EB41A4 /* TimelineView.swift in Sources */,
 				909D03E6236D27C000EB41A4 /* TimelinePoint.swift in Sources */,
+				909B10BE2375534E00EA7B67 /* DraggingTacker.swift in Sources */,
+				909B10BC2375528000EA7B67 /* DraggingView.swift in Sources */,
 				909D03EB236D81E800EB41A4 /* FlippedView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

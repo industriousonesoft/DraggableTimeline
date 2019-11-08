@@ -189,7 +189,6 @@ class TimelineView: NSView {
     
     required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-
     }
     
     required init?(coder: NSCoder) {
@@ -222,11 +221,16 @@ class TimelineView: NSView {
     }
     
     private func calcWidth() -> CGFloat {
-        let width = self.bounds.width - (self.contentInsets.left + self.contentInsets.right) - self.pointDiameter - self.lineWidth - TimelineView.gap * 2
+        //TODO: Update to the new demand
+//        let availableWidth = self.bounds.width
+        let availableWidth = (self.bounds.width - self.pointX()) * 2
+        let width = availableWidth - (self.contentInsets.left + self.contentInsets.right) - self.pointDiameter - self.lineWidth - TimelineView.gap * 2
         return self.displayType == .both ? width / 2 : width
     }
     
     private func pointX() -> CGFloat {
+        //TODO: Update to the new demand
+        return self.mouseStartPoint.x
         switch self.displayType {
         case .left:
             return NSMaxX(self.bounds) - self.contentInsets.right - self.lineWidth / 2
@@ -238,7 +242,9 @@ class TimelineView: NSView {
     }
     
     private func maxY() -> CGFloat {
-        return self.bounds.height - self.contentInsets.top //self.mouseStartPoint.y
+//        return self.bounds.height - self.contentInsets.top
+        //TODO: Update to the new demand
+        return self.mouseStartPoint.y
     }
     
     private func isOnRightSide(_ index: Int) -> Bool {
@@ -275,7 +281,7 @@ class TimelineView: NSView {
     private func updateSectionsInNonFlippedCoordinateSystemView() {
        
         let pointX = self.pointX()
-        let maxY: CGFloat = self.bounds.height - self.contentInsets.top
+        let maxY = self.maxY()
         let y: CGFloat = self.mouseDraggedPoint.y
         let maxWidth = self.calcWidth()
         let itemInterval = TimelineView.gap * 2.5
@@ -536,6 +542,33 @@ extension TimelineView {
     }
 }
 
+extension TimelineView: ScreenDragTackingViewProtocol {
+    func draggingTrack(_ track: DraggingTacker, willBeginAt screenPoint: NSPoint) {
+        if self.animation != nil {
+            self.animation?.removeObserver(self, forKeyPath: "currentProgress")
+            self.animation?.stop()
+            self.animation = nil
+        }
+        let locationInWindow = self.window!.convertFromScreen(.init(origin: screenPoint, size: .zero)).origin
+        let point = self.convert(locationInWindow, to: self)
+        self.mouseStartPoint = point
+        print("\(#function) screen point: \(screenPoint)")
+    }
+    func draggingTrack(_ track: DraggingTacker, movedTo screenPoint: NSPoint) {
+        let locationInWindow = self.window!.convertFromScreen(.init(origin: screenPoint, size: .zero)).origin
+        let point = self.convert(locationInWindow, to: self)
+        self.mouseDraggedPoint = point
+        print("\(#function) screen point: \(screenPoint)")
+    }
+    func draggingTrack(_ track: DraggingTacker, endedAt screenPoint: NSPoint) {
+        let locationInWindow = self.window!.convertFromScreen(.init(origin: screenPoint, size: .zero)).origin
+        let point = self.convert(locationInWindow, to: self)
+        self.mouseEndPoint = point
+        self.addAnimation()
+        print("\(#function) screen point: \(screenPoint)")
+    }
+}
+
 extension TimelineView {
     
     override func mouseDown(with event: NSEvent) {
@@ -621,4 +654,5 @@ class CustomizedAnimation: NSAnimation {
         }
     }
 }
+
 
