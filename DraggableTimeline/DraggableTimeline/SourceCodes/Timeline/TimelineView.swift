@@ -223,7 +223,7 @@ class TimelineView: NSView {
     private func calcWidth() -> CGFloat {
         //TODO: Update to the new demand
 //        let availableWidth = self.bounds.width
-        let availableWidth = (self.bounds.width - self.pointX()) * 2
+        let availableWidth: CGFloat = (self.bounds.width - self.pointX()) * 1.5
         let width = availableWidth - (self.contentInsets.left + self.contentInsets.right) - self.pointDiameter - self.lineWidth - TimelineView.gap * 2
         return self.displayType == .both ? width / 2 : width
     }
@@ -231,6 +231,7 @@ class TimelineView: NSView {
     private func pointX() -> CGFloat {
         //TODO: Update to the new demand
         return self.mouseStartPoint.x
+        /*
         switch self.displayType {
         case .left:
             return NSMaxX(self.bounds) - self.contentInsets.right - self.lineWidth / 2
@@ -239,6 +240,7 @@ class TimelineView: NSView {
         case .both:
             return (NSWidth(self.bounds) - self.contentInsets.left - self.contentInsets.right) / 2.0 - self.lineWidth / 2
         }
+         */
     }
     
     private func maxY() -> CGFloat {
@@ -290,8 +292,10 @@ class TimelineView: NSView {
         for i in (0..<self.sections.count).reversed() {
             
             let section = self.sections[i]
+            section.titleLabel.preferredMaxLayoutWidth = maxWidth
             let titleHeight = section.titleLabel.intrinsicContentSize.height
             let bubbleHeight = titleHeight + TimelineView.gap
+            section.descriptionLabel?.preferredMaxLayoutWidth = maxWidth
             let descriptionHeight = section.descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = titleHeight + descriptionHeight
             
@@ -403,9 +407,10 @@ class TimelineView: NSView {
         label.isEditable = false
         label.isSelectable = true
         label.focusRingType = .none
+        label.drawsBackground = true
         label.backgroundColor = .clear
         label.lineBreakMode = .byWordWrapping
-        label.preferredMaxLayoutWidth = self.calcWidth()
+        label.canDrawSubviewsIntoLayer = true
         return label
     }
     
@@ -418,9 +423,10 @@ class TimelineView: NSView {
             label.isEditable = false
             label.isSelectable = true
             label.focusRingType = .none
+            label.drawsBackground = true
             label.backgroundColor = .clear
             label.lineBreakMode = .byWordWrapping
-            label.preferredMaxLayoutWidth = calcWidth()
+            label.canDrawSubviewsIntoLayer = true
             return label
         }else {
             return nil
@@ -480,7 +486,7 @@ class TimelineView: NSView {
         shapeLayer.path = path
         shapeLayer.strokeColor = color
         shapeLayer.fillColor = fill ? color : .clear
-        shapeLayer.lineWidth = 1.0
+        shapeLayer.lineWidth = self.lineWidth
         
         self.layer?.addSublayer(shapeLayer)
     }
@@ -515,7 +521,7 @@ class TimelineView: NSView {
     
     private func drawDescription(_ rect: CGRect, textColor: NSColor, descriptionLabel: NSTextField) {
         descriptionLabel.textColor = textColor
-        descriptionLabel.frame = CGRect(x: rect.origin.x + 7, y: rect.origin.y, width: rect.width - 10, height: rect.height)
+        descriptionLabel.frame = CGRect(x: rect.origin.x + 10, y: rect.origin.y, width: rect.width - 10, height: rect.height)
         self.addSubview(descriptionLabel)
     }
 }
@@ -554,21 +560,26 @@ extension TimelineView: ScreenDragTackingViewProtocol {
         self.mouseStartPoint = point
         print("\(#function) screen point: \(screenPoint)")
     }
+    
     func draggingTrack(_ track: DraggingTacker, movedTo screenPoint: NSPoint) {
         let locationInWindow = self.window!.convertFromScreen(.init(origin: screenPoint, size: .zero)).origin
         let point = self.convert(locationInWindow, to: self)
         self.mouseDraggedPoint = point
         print("\(#function) screen point: \(screenPoint)")
     }
+    
     func draggingTrack(_ track: DraggingTacker, endedAt screenPoint: NSPoint) {
         let locationInWindow = self.window!.convertFromScreen(.init(origin: screenPoint, size: .zero)).origin
         let point = self.convert(locationInWindow, to: self)
         self.mouseEndPoint = point
-        self.addAnimation()
+        let distance: CGFloat = self.mouseStartPoint.y - self.mouseEndPoint.y
+        let duration: CGFloat = distance * 0.0015
+        print("duration: \(duration)")
+        self.addAnimation(duration)
         print("\(#function) screen point: \(screenPoint)")
     }
 }
-
+/*
 extension TimelineView {
     
     override func mouseDown(with event: NSEvent) {
@@ -588,7 +599,10 @@ extension TimelineView {
         let point = self.convert(event.locationInWindow, to: self)
         self.mouseEndPoint = point
 //        print("mouse up \(point)")
-        self.addAnimation()
+        let distance: CGFloat = self.mouseEndPoint.y - self.mouseStartPoint.y
+        let duration: CGFloat = distance * 0.0001
+        print("duration: \(duration)")
+        self.addAnimation(duration)
     }
     
     override func mouseDragged(with event: NSEvent) {
@@ -600,12 +614,13 @@ extension TimelineView {
     }
     
 }
+ */
 
 extension TimelineView: NSAnimationDelegate {
     
-    private func addAnimation() {
+    private func addAnimation(_ duration: CGFloat) {
         if self.animation == nil {
-            let animation = NSAnimation.init(duration: 2.0, animationCurve: .easeInOut)
+            let animation = NSAnimation.init(duration: TimeInterval(duration), animationCurve: .linear)
             animation.delegate = self
             animation.animationBlockingMode = .nonblocking
             animation.start()
