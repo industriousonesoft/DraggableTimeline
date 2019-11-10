@@ -695,10 +695,21 @@
                     <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fzi-36-kLJ" customClass="TimelineView" customModule="DraggableTimeline" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="534" height="352"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="NhS-SD-Czp">
+                                <rect key="frame" x="177" y="260" width="189" height="17"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" title="Hello, world" id="1Df-MT-xCu">
+                                    <font key="font" usesAppearanceFont="YES"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
                     </customView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="166" y="-232"/>
+            <point key="canvasLocation" x="-77" y="-257"/>
         </window>
     </objects>
 </document>

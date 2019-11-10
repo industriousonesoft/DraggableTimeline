@@ -130,6 +130,7 @@ private class DraggingOverlay: NSObject {
         window.level = NSWindow.Level(1)
     
         window.contentView?.needsLayout = true
+        
         return window
     }()
     
