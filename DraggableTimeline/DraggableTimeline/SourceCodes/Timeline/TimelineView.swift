@@ -57,7 +57,7 @@ class TimelineView: NSView {
         }
     }
     
-    var bubbleColor: NSColor = .init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
+    var bubbleColor: NSColor = .clear {//.init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
         didSet {
 //            DispatchQueue.main.async {
 //                self.refresh()
@@ -125,7 +125,7 @@ class TimelineView: NSView {
         }
     }
     
-    var lineWidth: CGFloat = 2.0 {
+    var lineWidth: CGFloat = 1.0 {
         didSet {
             if lineWidth < 0.0 {
                 lineWidth = 0.0
@@ -274,11 +274,12 @@ class TimelineView: NSView {
     
     private func updateSections() {
         
-        if self.isFlipped == false {
-            self.updateSectionsInNonFlippedCoordinateSystemView()
-        }else {
-            self.updateSectionsInFlippedCoordinateSystemView()
+        guard self.isFlipped == false else {
+            fatalError("The view MUST be flipped...")
         }
+        
+        self.updateSectionsInNonFlippedCoordinateSystemView()
+        
     }
     
     private func updateSectionsInNonFlippedCoordinateSystemView() {
@@ -286,9 +287,10 @@ class TimelineView: NSView {
         let titleLabelHeight: CGFloat = 15.0
         let pointX = self.pointX()
         let maxY = self.maxY()
+        let topMargin: CGFloat = 50.0
         let y: CGFloat = self.mouseDraggedPoint.y
         let maxWidth = self.calcWidth()
-        let itemInterval = TimelineView.gap * 2.5
+        let itemInterval = TimelineView.gap * 1.0
         let labelInterval: CGFloat = 3.0
         var contentHeight: CGFloat = 0.0
         
@@ -297,14 +299,14 @@ class TimelineView: NSView {
             let section = self.sections[i]
             let titleLabel = section.titleLabel
             titleLabel.preferredMaxLayoutWidth = maxWidth
-            let bubbleHeight = titleLabel.intrinsicContentSize.height + TimelineView.gap
+            let bubbleHeight = titleLabel.intrinsicContentSize.height
             
             let descriptionLabel = section.descriptionLabel
             descriptionLabel?.preferredMaxLayoutWidth = maxWidth
             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = bubbleHeight + descriptionHeight
             
-            if maxY - y < contentHeight + height {
+            if contentHeight + height > maxY - y + topMargin {
                 self.sections[i].point = .zero
                 self.sections[i].bubbleRect = .zero
                 self.sections[i].descriptionRect = .zero
@@ -321,8 +323,9 @@ class TimelineView: NSView {
             let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
             let onRight: Bool = section.onRight
             
+            let descriptionPointY = y + contentHeight + topMargin
             let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - titleWidth - offset - self.pointDiameter
-            let bubbltPointY = y + contentHeight + descriptionHeight + labelInterval
+            let bubbltPointY = descriptionPointY + descriptionHeight + labelInterval + itemInterval
         
             let point = CGPoint(x: pointX, y: bubbltPointY + bubbleHeight / 2 - self.pointDiameter / 2)
             
@@ -337,7 +340,7 @@ class TimelineView: NSView {
             if descriptionHeight > 0 {
                 descriptionRect = CGRect(
                     x: desPointX,
-                    y: y + contentHeight,
+                    y: descriptionPointY,
                     width: maxWidth,
                     height: descriptionHeight)
             }
@@ -363,58 +366,7 @@ class TimelineView: NSView {
         }
         
     }
-    
-    private func updateSectionsInFlippedCoordinateSystemView() {
-
-        var y: CGFloat = self.bounds.origin.y + self.contentInsets.top
-        let maxWidth = self.calcWidth()
-        let itemInterval = TimelineView.gap * 2.5
-        let labelInterval: CGFloat = 3.0
-        for i in 0 ..< self.points.count {
-            let item = self.points[i]
-            let titleLabel = self.buildTitleLabel(i)
-            let descriptionLabel = self.buildDescriptionLabel(i)
-            let titleHeight = titleLabel.intrinsicContentSize.height
-            let bubbleHeight = titleHeight + TimelineView.gap
-            let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
-            let height: CGFloat = titleHeight + descriptionHeight
-         
-            let point = CGPoint(x: self.bounds.origin.x + self.contentInsets.left + self.lineWidth / 2, y: y + bubbleHeight / 2)
-             
-            let maxTitleWidth = maxWidth
-            var titleWidth = titleLabel.intrinsicContentSize.width + 20
-            if titleWidth > maxTitleWidth {
-                titleWidth = maxTitleWidth
-            }
-             
-            let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
-            let bubbleRect = CGRect(
-                x: point.x + self.pointDiameter + self.lineWidth / 2 + offset,
-                y: y + self.pointDiameter / 2,
-                width: titleWidth,
-                height: bubbleHeight)
-             
-            var descriptionRect: CGRect?
-            if descriptionHeight > 0 {
-                descriptionRect = CGRect(
-                    x: bubbleRect.origin.x,
-                    y: bubbleRect.origin.y + bubbleRect.height + labelInterval,
-                    width: maxWidth,
-                    height: descriptionHeight)
-             }
-            
-            self.sections.append((point, bubbleRect, descriptionRect, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: self.isOnRightSide(i), canBeDraw: false))
-             
-            y += height
-            y += itemInterval
-
-        }
-         
-        y += self.pointDiameter / 2
-        let newContentSize = CGSize(width: self.bounds.width - (self.contentInsets.left + self.contentInsets.right), height: y)
-        self.setFrameSize(newContentSize)
-    }
-    
+  
     private func buildTitleLabel(_ index: Int) -> NSTextField {
         let label = NSTextField.init()
         label.stringValue = points[index].title
@@ -459,7 +411,7 @@ class TimelineView: NSView {
                 let endY = self.maxY()
                 let end: NSPoint = .init(x: start.x, y: endY)
                 
-                self.drawLine(start, end: end, color: NSColor.green.cgColor)
+                self.drawLine(start, end: end, color: NSColor.gray.cgColor)
                 
                 self.sections.forEach { (section) in
                     
@@ -570,7 +522,7 @@ extension TimelineView: ScreenDragTackingViewProtocol {
         let locationInWindow = self.window!.convertFromScreen(.init(origin: screenPoint, size: .zero)).origin
         let point = self.convert(locationInWindow, to: self)
         self.mouseDraggedPoint = point
-        print("\(#function) screen point: \(screenPoint)")
+//        print("\(#function) screen point: \(screenPoint)")
     }
     
     func draggingTrack(_ track: DraggingTacker, endedAt screenPoint: NSPoint) {
@@ -581,7 +533,7 @@ extension TimelineView: ScreenDragTackingViewProtocol {
         let duration: CGFloat = distance * 0.0015
         print("duration: \(duration)")
         self.addAnimation(duration)
-        print("\(#function) screen point: \(screenPoint)")
+//        print("\(#function) screen point: \(screenPoint)")
     }
 }
 /*

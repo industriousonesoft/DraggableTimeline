@@ -26,11 +26,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Insert code here to tear down your application
     }
     
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        self.window.makeKeyAndOrderFront(nil)
+        return true
+    }
+    
     func initStatusItem() {
             
-        let view = NSView.init(frame: NSRect.init(x: 0, y: 0, width: 20, height: 20))
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.red.cgColor
+        let view = NSImageView.init(frame: NSRect.init(x: 0, y: 0, width: 20, height: 20))
+        view.image = NSImage.init(imageLiteralResourceName: "statusicon_light")
         self.statusItem.view = view
         
         NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { (event) -> NSEvent? in
@@ -45,7 +49,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func statusItemButtonDidClicked(_ sender: Any) {
             
         if let source = statusItem.view, let mouseEvent = NSApp.currentEvent, mouseEvent.type == .leftMouseDown  {
-            DraggingTacker.shared.trackDrag(forMouseDownEvent: mouseEvent, in: source)
+            
+            //FIXME: To correct the center point x
+            let centerPoint = NSPoint.init(x: NSMidX(source.frame) - 2.0, y: NSMidY(source.frame))
+
+            let beginScreenPoint = source.window!.convertToScreen(.init(origin: centerPoint, size: .zero)).origin
+            
+            print("startPoint: \(beginScreenPoint)")
+
+            DraggingTacker.shared.trackDragging(forMouseDownEvent: mouseEvent, in: source, beginAt: beginScreenPoint)
         }
         
     }
@@ -56,14 +68,14 @@ extension AppDelegate {
     
     private func initTimelineData() {
         
-        let black = NSColor.black
-        let green = NSColor.init(red: 76/255, green: 175/255, blue: 80/255, alpha: 1)
+        let pointColor = NSColor.white
+        let lineColor = NSColor.black
         
         let myPoints = [
-            TimelinePoint(title: "06:46 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam.", pointColor: black, lineColor: black, fill: false),
-            TimelinePoint(title: "07:00 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr.", pointColor: black, lineColor: black, fill: false),
-            TimelinePoint(title: "07:30 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam.", pointColor: black, lineColor: black, fill: false),
-            TimelinePoint(title: "08:00 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt.", pointColor: green, lineColor: green, fill: true),
+            TimelinePoint(title: "06:46 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam.", pointColor: pointColor, lineColor: lineColor, fill: false),
+            TimelinePoint(title: "07:00 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr.", pointColor: pointColor, lineColor: lineColor, fill: false),
+            TimelinePoint(title: "07:30 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam.", pointColor: pointColor, lineColor: lineColor, fill: false),
+            TimelinePoint(title: "08:00 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt.", pointColor: pointColor, lineColor: lineColor, fill: true),
             TimelinePoint(title: "11:30 AM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam."),
             TimelinePoint(title: "02:30 PM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam."),
             TimelinePoint(title: "05:00 PM", description: "Lorem ipsum dolor sit amet."),

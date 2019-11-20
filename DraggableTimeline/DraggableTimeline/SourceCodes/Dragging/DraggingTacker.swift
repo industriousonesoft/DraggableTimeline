@@ -25,6 +25,7 @@ protocol ScreenDragTackingViewProtocol {
 class DraggingTacker: NSObject {
     
     private let draggingOverlay = DraggingOverlay.init()
+    private var beginScreenPoint: NSPoint = .zero
     
     /*
      @objc dynamic var startScreenPoint: NSPoint = .zero
@@ -58,10 +59,11 @@ class DraggingTacker: NSObject {
 
 extension DraggingTacker {
     
-    public func trackDrag(forMouseDownEvent event: NSEvent, in source: NSView) {
+    public func trackDragging(forMouseDownEvent event: NSEvent, in source: NSView, beginAt screenPoint: NSPoint = .zero) {
         if let pasteboardItem = NSPasteboardItem(pasteboardPropertyList: "", ofType: kUTTypeData as NSPasteboard.PasteboardType) {
             let item = NSDraggingItem(pasteboardWriter:pasteboardItem)
             item.draggingFrame = source.frame
+            self.beginScreenPoint = screenPoint
             let session = source.beginDraggingSession(with: [item], event: event, source: self)
             session.animatesToStartingPositionsOnCancelOrFail = false
         }
@@ -86,7 +88,8 @@ extension DraggingTacker: NSDraggingSource {
          self.endScreenPoint = screenPoint
          self.draggingScreenPoint = screenPoint
          */
-        self.delegate?.draggingTrack(self, willBeginAt: screenPoint)
+        
+        self.delegate?.draggingTrack(self, willBeginAt: (self.beginScreenPoint != .zero ? self.beginScreenPoint : screenPoint))
         self.draggingOverlay.hide()
         self.draggingOverlay.show()
 //        print("\(#function) screen point: \(screenPoint)")
