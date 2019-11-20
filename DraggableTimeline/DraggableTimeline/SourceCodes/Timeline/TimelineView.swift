@@ -104,7 +104,7 @@ class TimelineView: NSView {
         }
     }
     
-    var pointDiameter: CGFloat = 6.0 {
+    var pointDiameter: CGFloat = 8.0 {
         didSet {
             if pointDiameter < 0.0 {
                 pointDiameter = 0.0
@@ -125,7 +125,7 @@ class TimelineView: NSView {
         }
     }
     
-    var lineWidth: CGFloat = 1.0 {
+    var lineWidth: CGFloat = 1.2 {
         didSet {
             if lineWidth < 0.0 {
                 lineWidth = 0.0
@@ -265,7 +265,7 @@ class TimelineView: NSView {
             let descriptionLabel = self.buildDescriptionLabel(i)
             
             let onRight: Bool = self.isOnRightSide(i)
-            
+            !!在这个循环中算出当前item占用的总高度sumHeight，然后在updateSections更新y坐标，并当y距离maxY的高度大于在这个循环中算出当前item占用的总高度sumHeight，然后在updateSections更新y坐标，并当y距离maxY的高度大于时，item的y坐标不在随着y变化
             descriptionLabel?.alignment = onRight ? .left : .right
             
             self.sections.append((.zero, .zero, .zero, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: onRight, canBeDraw: false))
@@ -287,10 +287,10 @@ class TimelineView: NSView {
         let titleLabelHeight: CGFloat = 15.0
         let pointX = self.pointX()
         let maxY = self.maxY()
-        let topMargin: CGFloat = 50.0
+        let bottomMargin: CGFloat = 50.0
         let y: CGFloat = self.mouseDraggedPoint.y
         let maxWidth = self.calcWidth()
-        let itemInterval = TimelineView.gap * 1.0
+        let itemInterval: CGFloat = 5.0
         let labelInterval: CGFloat = 3.0
         var contentHeight: CGFloat = 0.0
         
@@ -306,7 +306,7 @@ class TimelineView: NSView {
             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
             let height: CGFloat = bubbleHeight + descriptionHeight
             
-            if contentHeight + height > maxY - y + topMargin {
+            if maxY - y + bottomMargin < contentHeight + height {
                 self.sections[i].point = .zero
                 self.sections[i].bubbleRect = .zero
                 self.sections[i].descriptionRect = .zero
@@ -323,7 +323,7 @@ class TimelineView: NSView {
             let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
             let onRight: Bool = section.onRight
             
-            let descriptionPointY = y + contentHeight + topMargin
+            let descriptionPointY = y + contentHeight + bottomMargin
             let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - titleWidth - offset - self.pointDiameter
             let bubbltPointY = descriptionPointY + descriptionHeight + labelInterval + itemInterval
         
@@ -357,7 +357,6 @@ class TimelineView: NSView {
                 let descFrame = NSOffsetRect(descriptionRect!, 10, 0)
                 self.updateLabel(descriptionLabel!, frame: descFrame, textColor: self.descriptionColor)
             }
-            
             
             contentHeight += height
             contentHeight += itemInterval

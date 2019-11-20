@@ -18,8 +18,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Insert code here to initialize your application
+        self.addObservers()
         self.initStatusItem()
         self.initTimelineData()
+        self.updateStatusBarImageView()
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -34,7 +36,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func initStatusItem() {
             
         let view = NSImageView.init(frame: NSRect.init(x: 0, y: 0, width: 20, height: 20))
-        view.image = NSImage.init(imageLiteralResourceName: "statusicon_light")
         self.statusItem.view = view
         
         NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { (event) -> NSEvent? in
@@ -50,8 +51,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
         if let source = statusItem.view, let mouseEvent = NSApp.currentEvent, mouseEvent.type == .leftMouseDown  {
             
+            print(source.frame)
             //FIXME: To correct the center point x
-            let centerPoint = NSPoint.init(x: NSMidX(source.frame) - 2.0, y: NSMidY(source.frame))
+            let centerPoint = NSPoint.init(x: NSMidX(source.frame), y: NSMidY(source.frame))
 
             let beginScreenPoint = source.window!.convertToScreen(.init(origin: centerPoint, size: .zero)).origin
             
@@ -61,7 +63,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
     }
+    
+    private func updateStatusBarImageView() {
+        if let imageView = self.statusItem.view as? NSImageView {
+            let isDarkMode = UserDefaults.standard.isDarkMode()
+            imageView.image = NSImage.init(imageLiteralResourceName: isDarkMode ? "statusicon_light" : "statusicon_dark")
+        }
+        
+    }
             
+}
+
+extension AppDelegate {
+    func addObservers() {
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(handleAppleInterfaceThemeChangedNotification(_:)), name: .AppleInterfaceThemeChanged, object: nil)
+    }
+    
+    @objc func handleAppleInterfaceThemeChangedNotification(_ notification: NSNotification) {
+        DispatchQueue.main.async {
+            self.updateStatusBarImageView()
+        }
+    }
 }
 
 extension AppDelegate {
