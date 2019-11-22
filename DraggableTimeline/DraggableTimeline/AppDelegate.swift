@@ -105,8 +105,8 @@ extension AppDelegate {
             TimelinePoint(title: "11:45 PM", description: "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam.")
         ]
         
-        timeline.contentInsets = NSEdgeInsetsMake(20, 20, 20, 20)
-        timeline.points = myPoints
+//        timeline.contentInsets = NSEdgeInsetsMake(20, 20, 20, 20)
+//        timeline.points = myPoints
         
         let timelineView = TimelineView.init(frame: .zero)
         DraggingTacker.shared.setScreenDragTrackingView(timelineView)

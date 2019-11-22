@@ -44,10 +44,12 @@ private typealias SectionTuple = (point: CGPoint, bubbleRect: CGRect, descriptio
 
 class TimelineView: NSView {
     
-    private var animation: NSAnimation? = nil
     private static let gap: CGFloat = 15.0
+    private static let ContentMaxWidth: CGFloat = 800.0
     
+    private var animation: NSAnimation? = nil
     private var sections: [SectionTuple] = []
+    private var contentHeightSum: CGFloat = 0.0
     
     var contentInsets: NSEdgeInsets = .init(top: 0, left: 0, bottom: 0, right: 0) {
         didSet {
@@ -221,10 +223,8 @@ class TimelineView: NSView {
   
     }
     
-    private func calcWidth() -> CGFloat {
-        //TODO: Update to the new demand
-//        let availableWidth = self.bounds.width
-        let availableWidth: CGFloat = (self.bounds.width - self.pointX()) * 1.5
+    private func sectionMaxWidth() -> CGFloat {
+        let availableWidth: CGFloat = TimelineView.ContentMaxWidth
         let width = availableWidth - (self.contentInsets.left + self.contentInsets.right) - self.pointDiameter - self.lineWidth - TimelineView.gap * 2
         return self.displayType == .both ? width / 2 : width
     }
@@ -259,17 +259,53 @@ class TimelineView: NSView {
     }
     
     private func buildSections() {
+        
+        let maxWidth = self.sectionMaxWidth()
+        let sectionInterval: CGFloat = 5.0
+        let labelInterval: CGFloat = 3.0
+        var contentHeight: CGFloat = 0.0
+        
         for i in (0..<self.points.count) {
-            let item = self.points[i]
-            let titleLabel = self.buildTitleLabel(i)
-            let descriptionLabel = self.buildDescriptionLabel(i)
             
+            let section = self.points[i]
+            let titleLabel = self.buildTitleLabel(i)
+            titleLabel.preferredMaxLayoutWidth = maxWidth
+            let bubbleHeight = titleLabel.intrinsicContentSize.height
+            
+            let descriptionLabel = self.buildDescriptionLabel(i)
+            descriptionLabel?.preferredMaxLayoutWidth = maxWidth
+            let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
+            let sectionHeight: CGFloat = bubbleHeight + descriptionHeight
+            
+            let bubbleWidth = min(titleLabel.intrinsicContentSize.width + 20, maxWidth)
+            
+            let bubbleRect = CGRect(
+                x: 0,
+                y: 0,
+                width: bubbleWidth,
+                height: bubbleHeight)
+            
+            var descriptionRect: CGRect = .zero
+            if descriptionHeight > 0 {
+                descriptionRect = CGRect(
+                    x: 0,
+                    y: 0,
+                    width: maxWidth,
+                    height: descriptionHeight)
+            }
+           
             let onRight: Bool = self.isOnRightSide(i)
-            !!在这个循环中算出当前item占用的总高度sumHeight，然后在updateSections更新y坐标，并当y距离maxY的高度大于在这个循环中算出当前item占用的总高度sumHeight，然后在updateSections更新y坐标，并当y距离maxY的高度大于时，item的y坐标不在随着y变化
+            
             descriptionLabel?.alignment = onRight ? .left : .right
             
-            self.sections.append((.zero, .zero, .zero, titleLabel, descriptionLabel, item.pointColor.cgColor, item.lineColor.cgColor, item.fill, onRight: onRight, canBeDraw: false))
+            self.sections.append((.zero, bubbleRect, descriptionRect, titleLabel, descriptionLabel, section.pointColor.cgColor, section.lineColor.cgColor, section.fill, onRight: onRight, canBeDraw: false))
+            
+            contentHeight += sectionHeight
+            contentHeight += sectionInterval
+            contentHeight += labelInterval
         }
+    
+        self.contentHeightSum = contentHeight
     }
     
     private func updateSections() {
@@ -289,78 +325,54 @@ class TimelineView: NSView {
         let maxY = self.maxY()
         let bottomMargin: CGFloat = 50.0
         let y: CGFloat = self.mouseDraggedPoint.y
-        let maxWidth = self.calcWidth()
-        let itemInterval: CGFloat = 5.0
+        let maxWidth = self.sectionMaxWidth()
+        let sectionInterval: CGFloat = 5.0
         let labelInterval: CGFloat = 3.0
-        var contentHeight: CGFloat = 0.0
-        
+        var curContentHeight: CGFloat = 0.0
+    
         for i in (0..<self.sections.count).reversed() {
             
+            //In Swift: A value copy happened here cause the section variable is a value type rather than a class type
+            //In other word, if you wanna change the property of section in the array named "sections", you MUST access the array directly
             let section = self.sections[i]
-            let titleLabel = section.titleLabel
-            titleLabel.preferredMaxLayoutWidth = maxWidth
-            let bubbleHeight = titleLabel.intrinsicContentSize.height
             
-            let descriptionLabel = section.descriptionLabel
-            descriptionLabel?.preferredMaxLayoutWidth = maxWidth
-            let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
-            let height: CGFloat = bubbleHeight + descriptionHeight
+            let bubbleWidth = section.bubbleRect.width
+            let bubbleHeight = section.bubbleRect.height
+            let descHeight = section.descriptionRect?.height ?? 0
+            let sectionHeight: CGFloat = bubbleHeight + descHeight
+
+            self.sections[i].canBeDraw = (maxY - y + bottomMargin < curContentHeight + sectionHeight) ? false : true
             
-            if maxY - y + bottomMargin < contentHeight + height {
-                self.sections[i].point = .zero
-                self.sections[i].bubbleRect = .zero
-                self.sections[i].descriptionRect = .zero
-                self.sections[i].canBeDraw = false
+            if self.sections[i].canBeDraw == false {
                 break
-            }
-            
-            let maxTitleWidth = maxWidth
-            var titleWidth = section.titleLabel.intrinsicContentSize.width + 20
-            if titleWidth > maxTitleWidth {
-                titleWidth = maxTitleWidth
             }
             
             let offset: CGFloat = self.hasBubbleArrow ? 13 : 5
             let onRight: Bool = section.onRight
             
-            let descriptionPointY = y + contentHeight + bottomMargin
-            let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - titleWidth - offset - self.pointDiameter
-            let bubbltPointY = descriptionPointY + descriptionHeight + labelInterval + itemInterval
-        
+            let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - bubbleWidth - offset - self.pointDiameter
+            let descPointX = onRight ? bubblePointX : pointX - maxWidth - offset - self.pointDiameter
+            
+            let descPointY = y + curContentHeight + bottomMargin
+            let bubbltPointY = descPointY + descHeight + labelInterval + sectionInterval
+            
             let point = CGPoint(x: pointX, y: bubbltPointY + bubbleHeight / 2 - self.pointDiameter / 2)
-            
-            let bubbleRect = CGRect(
-                x: bubblePointX,
-                y: bubbltPointY,
-                width: titleWidth,
-                height: bubbleHeight)
-            
-            let desPointX = onRight ? bubbleRect.origin.x : pointX - maxWidth - offset - self.pointDiameter
-            var descriptionRect: CGRect?
-            if descriptionHeight > 0 {
-                descriptionRect = CGRect(
-                    x: desPointX,
-                    y: descriptionPointY,
-                    width: maxWidth,
-                    height: descriptionHeight)
-            }
-            
+      
             self.sections[i].point = point
-            self.sections[i].bubbleRect = bubbleRect
-            self.sections[i].descriptionRect = descriptionRect
-            self.sections[i].canBeDraw = true
+            self.sections[i].bubbleRect.origin = .init(x: bubblePointX, y: bubbltPointY)
+            self.sections[i].descriptionRect?.origin = .init(x: descPointX, y: descPointY)
            
-            let titleFrame = CGRect(x: bubbleRect.origin.x + 10, y: bubbleRect.origin.y + (bubbleRect.size.height - titleLabelHeight) / 2  , width: bubbleRect.size.width - 10, height: titleLabelHeight)
-            self.updateLabel(titleLabel, frame: titleFrame, textColor: self.titleColor)
+            let titleFrame = CGRect(x: bubblePointX + 10, y: bubbltPointY + (bubbleHeight - titleLabelHeight) / 2  , width: bubbleWidth - 10, height: titleLabelHeight)
+            self.updateLabel(section.titleLabel, frame: titleFrame, textColor: self.titleColor)
             
-            if descriptionLabel != nil && descriptionRect != .zero {
-                let descFrame = NSOffsetRect(descriptionRect!, 10, 0)
-                self.updateLabel(descriptionLabel!, frame: descFrame, textColor: self.descriptionColor)
+            if let label = section.descriptionLabel, let rect = self.sections[i].descriptionRect {
+                let descFrame = NSOffsetRect(rect, 10, 0)
+                self.updateLabel(label, frame: descFrame, textColor: self.descriptionColor)
             }
             
-            contentHeight += height
-            contentHeight += itemInterval
-            contentHeight += labelInterval
+            curContentHeight += sectionHeight
+            curContentHeight += sectionInterval
+            curContentHeight += labelInterval
             
         }
         
