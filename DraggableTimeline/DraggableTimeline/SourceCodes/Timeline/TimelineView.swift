@@ -60,7 +60,9 @@ class TimelineView: NSView {
         }
     }
     
-    var bubbleColor: NSColor = .clear {//.init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
+    var lineColor: NSColor = .gray
+    
+    var bubbleColor: NSColor = .gray {//.init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
         didSet {
 //            DispatchQueue.main.async {
 //                self.refresh()
@@ -271,7 +273,7 @@ class TimelineView: NSView {
             let section = self.points[i]
             let titleLabel = self.buildTitleLabel(i)
             titleLabel.preferredMaxLayoutWidth = maxWidth
-            let bubbleHeight = titleLabel.intrinsicContentSize.height
+            let bubbleHeight = titleLabel.intrinsicContentSize.height + 10
             
             let descriptionLabel = self.buildDescriptionLabel(i)
             descriptionLabel?.preferredMaxLayoutWidth = maxWidth
@@ -363,7 +365,7 @@ class TimelineView: NSView {
             let descPointY = sectionBaseY + curContentHeight
             let bubbltPointY = descPointY + descHeight + labelInterval + sectionInterval
             
-            let point = CGPoint(x: pointX, y: bubbltPointY + bubbleHeight / 2 - self.pointDiameter / 2)
+            let point = CGPoint(x: pointX - self.pointDiameter / 2, y: bubbltPointY + bubbleHeight / 2 - self.pointDiameter / 2)
       
             self.sections[i].point = point
             self.sections[i].bubbleRect.origin = .init(x: bubblePointX, y: bubbltPointY)
@@ -425,16 +427,27 @@ class TimelineView: NSView {
             
             if self.sections.count > 0 {
                 
-                let start: NSPoint = .init(x: self.pointX() + self.pointDiameter / 2, y: self.mouseDraggingPoint.y)
+                let start: NSPoint = .init(x: self.pointX(), y: self.mouseDraggingPoint.y)
                 let endY = self.maxY()
                 let end: NSPoint = .init(x: start.x, y: endY)
                 
-                self.drawLine(start, end: end, color: NSColor.gray.cgColor)
+                self.drawLine(start, end: end, color: self.lineColor.cgColor)
+                
+                let knobPointDiameter: CGFloat = 3.0
+                self.drawPoint(NSPoint.init(x: start.x - knobPointDiameter / 2, y: start.y - knobPointDiameter / 2), diameter: knobPointDiameter, color: self.lineColor.cgColor, fill: true, lineWidth: 1.0)
+                
+                let knobWidth: CGFloat = 60
+                let knobHeight: CGFloat = 30
+                let knobRect = NSRect.init(x: start.x + (self.hasBubbleArrow ? self.bubbleArrowSize.width : 0.0),
+                                           y: start.y - knobHeight / 2.0,
+                                           width: knobWidth,
+                                           height: knobHeight)
+                self.drawDraggingKnob(knobRect, backgroundColor: self.bubbleColor, onRight: true)
                 
                 self.sections.forEach { (section) in
                     
                     if section.canBeDraw {
-                        self.drawPoint(section.point, color: section.pointColor, fill: section.fill)
+                        self.drawPoint(section.point, diameter: self.pointDiameter , color: section.pointColor, fill: section.fill, lineWidth: self.lineWidth)
                         self.drawBubble(section.bubbleRect, backgroundColor: self.bubbleColor, onRight: section.onRight)
                     }
                     
@@ -459,14 +472,14 @@ class TimelineView: NSView {
         self.layer?.addSublayer(shapeLayer)
     }
     
-    private func drawPoint(_ point: CGPoint, color: CGColor, fill: Bool) {
-        let path = CGPath.init(ellipseIn: CGRect(x: point.x, y: point.y, width: self.pointDiameter, height: self.pointDiameter), transform: nil)
+    private func drawPoint(_ point: CGPoint, diameter: CGFloat, color: CGColor, fill: Bool, lineWidth: CGFloat) {
+        let path = CGPath.init(ellipseIn: CGRect(x: point.x, y: point.y, width: diameter, height: diameter), transform: nil)
         
         let shapeLayer = CAShapeLayer()
         shapeLayer.path = path
         shapeLayer.strokeColor = color
         shapeLayer.fillColor = fill ? color : .clear
-        shapeLayer.lineWidth = self.lineWidth
+        shapeLayer.lineWidth = lineWidth
         
         self.layer?.addSublayer(shapeLayer)
     }
@@ -485,6 +498,28 @@ class TimelineView: NSView {
             path.closeSubpath()
         }
        
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.path = path
+        shapeLayer.fillColor = backgroundColor.cgColor
+        
+        self.layer?.insertSublayer(shapeLayer, below: nil)
+        
+    }
+    
+    private func drawDraggingKnob(_ rect: CGRect, backgroundColor: NSColor, onRight: Bool) {
+        let path = CGMutablePath.init()
+        path.addRoundedRect(in: rect, cornerWidth: self.bubbleRadius, cornerHeight: self.bubbleRadius)
+        
+        if self.hasBubbleArrow && self.bubbleArrowSize != .zero {
+            let pointX = onRight ? NSMinX(rect) : NSMaxX(rect)
+            let arrowPointX = onRight ? pointX - self.bubbleArrowSize.width : pointX + self.bubbleArrowSize.width
+            let startPont = CGPoint(x: pointX , y: rect.origin.y + (rect.height - self.bubbleArrowSize.height) / 2.0 )
+            path.move(to: startPont)
+            path.addLine(to: CGPoint(x: arrowPointX, y: rect.origin.y + rect.height / 2))
+            path.addLine(to: CGPoint(x: pointX, y: rect.origin.y + (rect.height + self.bubbleArrowSize.height) / 2))
+            path.closeSubpath()
+        }
+        
         let shapeLayer = CAShapeLayer()
         shapeLayer.path = path
         shapeLayer.fillColor = backgroundColor.cgColor
@@ -548,7 +583,7 @@ extension TimelineView: ScreenDragTackingViewProtocol {
         let point = self.convert(locationInWindow, to: self)
         self.mouseEndPoint = point
         let distance: CGFloat = self.mouseStartPoint.y - self.mouseEndPoint.y
-        let duration: CGFloat = distance * 0.0015
+        let duration: CGFloat = max(0, distance * 0.0015)
         print("duration: \(duration)")
         self.addAnimation(duration)
 //        print("\(#function) screen point: \(screenPoint)")
