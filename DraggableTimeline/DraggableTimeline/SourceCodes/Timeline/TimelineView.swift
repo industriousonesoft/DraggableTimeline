@@ -46,6 +46,7 @@ class TimelineView: NSView {
     
     private static let gap: CGFloat = 15.0
     private static let ContentMaxWidth: CGFloat = 800.0
+    private static let BottomMargin: CGFloat = 50.0
     
     private var animation: NSAnimation? = nil
     private var sections: [SectionTuple] = []
@@ -177,7 +178,7 @@ class TimelineView: NSView {
         }
     }
     
-    var mouseDraggedPoint: NSPoint = NSZeroPoint {
+    var mouseDraggingPoint: NSPoint = NSZeroPoint {
         didSet {
             DispatchQueue.main.async {
                 self.refresh()
@@ -306,6 +307,7 @@ class TimelineView: NSView {
         }
     
         self.contentHeightSum = contentHeight
+        print(self.contentHeightSum)
     }
     
     private func updateSections() {
@@ -323,13 +325,18 @@ class TimelineView: NSView {
         let titleLabelHeight: CGFloat = 15.0
         let pointX = self.pointX()
         let maxY = self.maxY()
-        let bottomMargin: CGFloat = 50.0
-        let y: CGFloat = self.mouseDraggedPoint.y
         let maxWidth = self.sectionMaxWidth()
         let sectionInterval: CGFloat = 5.0
         let labelInterval: CGFloat = 3.0
+        let draggingY: CGFloat = self.mouseDraggingPoint.y
+        var sectionBaseY = draggingY + TimelineView.BottomMargin
+        let availableHeight = maxY - draggingY - TimelineView.BottomMargin
         var curContentHeight: CGFloat = 0.0
-    
+        
+        if availableHeight >= self.contentHeightSum + TimelineView.gap {
+            sectionBaseY = maxY - self.contentHeightSum - TimelineView.gap
+        }
+        
         for i in (0..<self.sections.count).reversed() {
             
             //In Swift: A value copy happened here cause the section variable is a value type rather than a class type
@@ -340,8 +347,8 @@ class TimelineView: NSView {
             let bubbleHeight = section.bubbleRect.height
             let descHeight = section.descriptionRect?.height ?? 0
             let sectionHeight: CGFloat = bubbleHeight + descHeight
-
-            self.sections[i].canBeDraw = (maxY - y + bottomMargin < curContentHeight + sectionHeight) ? false : true
+            
+            self.sections[i].canBeDraw = (availableHeight < curContentHeight + sectionHeight) ? false : true
             
             if self.sections[i].canBeDraw == false {
                 break
@@ -353,7 +360,7 @@ class TimelineView: NSView {
             let bubblePointX = onRight ? pointX + self.pointDiameter + offset : pointX - bubbleWidth - offset - self.pointDiameter
             let descPointX = onRight ? bubblePointX : pointX - maxWidth - offset - self.pointDiameter
             
-            let descPointY = y + curContentHeight + bottomMargin
+            let descPointY = sectionBaseY + curContentHeight
             let bubbltPointY = descPointY + descHeight + labelInterval + sectionInterval
             
             let point = CGPoint(x: pointX, y: bubbltPointY + bubbleHeight / 2 - self.pointDiameter / 2)
@@ -418,7 +425,7 @@ class TimelineView: NSView {
             
             if self.sections.count > 0 {
                 
-                let start: NSPoint = .init(x: self.pointX() + self.pointDiameter / 2, y: self.mouseDraggedPoint.y)
+                let start: NSPoint = .init(x: self.pointX() + self.pointDiameter / 2, y: self.mouseDraggingPoint.y)
                 let endY = self.maxY()
                 let end: NSPoint = .init(x: start.x, y: endY)
                 
@@ -532,7 +539,7 @@ extension TimelineView: ScreenDragTackingViewProtocol {
     func draggingTrack(_ track: DraggingTacker, movedTo screenPoint: NSPoint) {
         let locationInWindow = self.window!.convertFromScreen(.init(origin: screenPoint, size: .zero)).origin
         let point = self.convert(locationInWindow, to: self)
-        self.mouseDraggedPoint = point
+        self.mouseDraggingPoint = point
 //        print("\(#function) screen point: \(screenPoint)")
     }
     
@@ -576,7 +583,7 @@ extension TimelineView {
     override func mouseDragged(with event: NSEvent) {
         super.mouseUp(with: event)
         let point = self.convert(event.locationInWindow, to: self)
-        self.mouseDraggedPoint = point
+        self.mouseDraggingPoint = point
 //        print("mouse dragged \(point)")
         
     }
@@ -613,7 +620,7 @@ extension TimelineView: NSAnimationDelegate {
     @objc override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         if keyPath == "currentProgress", let progress = change?[.newKey] as? NSAnimation.Progress {
             let currentPointY = self.maxY() - (self.mouseStartPoint.y - self.mouseEndPoint.y) * CGFloat(1 - progress)
-            self.mouseDraggedPoint = .init(x: self.mouseStartPoint.x, y: currentPointY)
+            self.mouseDraggingPoint = .init(x: self.mouseStartPoint.x, y: currentPointY)
 //            print("currentPointY => \(currentPointY)")
         }
     }
