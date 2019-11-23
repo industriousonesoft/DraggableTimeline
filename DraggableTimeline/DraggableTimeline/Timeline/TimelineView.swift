@@ -51,6 +51,10 @@ class TimelineView: NSView {
     private var animation: NSAnimation? = nil
     private var sections: [SectionTuple] = []
     private var contentHeightSum: CGFloat = 0.0
+    private var knobLabel: NSTextField? = nil
+    private var knobRect: NSRect = .zero
+    private var knobWidth: CGFloat = 90
+    private var knobHeight: CGFloat = 26
     
     var contentInsets: NSEdgeInsets = .init(top: 0, left: 0, bottom: 0, right: 0) {
         didSet {
@@ -271,11 +275,11 @@ class TimelineView: NSView {
         for i in (0..<self.points.count) {
             
             let section = self.points[i]
-            let titleLabel = self.buildTitleLabel(i)
+            let titleLabel = self.buildTitleLabel(section.title)
             titleLabel.preferredMaxLayoutWidth = maxWidth
             let bubbleHeight = titleLabel.intrinsicContentSize.height + 10
             
-            let descriptionLabel = self.buildDescriptionLabel(i)
+            let descriptionLabel = self.buildDescriptionLabel(section.description)
             descriptionLabel?.preferredMaxLayoutWidth = maxWidth
             let descriptionHeight = descriptionLabel?.intrinsicContentSize.height ?? 0
             let sectionHeight: CGFloat = bubbleHeight + descriptionHeight
@@ -308,6 +312,8 @@ class TimelineView: NSView {
             contentHeight += labelInterval
         }
     
+        self.knobRect = .zero
+        self.knobLabel = self.buildTitleLabel("")
         self.contentHeightSum = contentHeight
         print(self.contentHeightSum)
     }
@@ -318,26 +324,22 @@ class TimelineView: NSView {
             fatalError("The view MUST be flipped...")
         }
         
-        self.updateSectionsInNonFlippedCoordinateSystemView()
-        
-    }
-    
-    private func updateSectionsInNonFlippedCoordinateSystemView() {
-       
-        let titleLabelHeight: CGFloat = 15.0
+        let titleLabelHeight: CGFloat = 17.0
         let pointX = self.pointX()
         let maxY = self.maxY()
         let maxWidth = self.sectionMaxWidth()
         let sectionInterval: CGFloat = 5.0
         let labelInterval: CGFloat = 3.0
-        let draggingY: CGFloat = self.mouseDraggingPoint.y
+        let draggingY = self.mouseDraggingPoint.y
         var sectionBaseY = draggingY + TimelineView.BottomMargin
-        let availableHeight = maxY - draggingY - TimelineView.BottomMargin
+        let availableHeight = maxY - draggingY
         var curContentHeight: CGFloat = 0.0
         
-        if availableHeight >= self.contentHeightSum + TimelineView.gap {
+        if availableHeight - TimelineView.BottomMargin >= self.contentHeightSum + TimelineView.gap {
             sectionBaseY = maxY - self.contentHeightSum - TimelineView.gap
         }
+        let minutes = ((availableHeight / maxY) * 60.0).rounded()
+        self.knobLabel?.stringValue = "In \(minutes) mins"
         
         for i in (0..<self.sections.count).reversed() {
             
@@ -366,12 +368,12 @@ class TimelineView: NSView {
             let bubbltPointY = descPointY + descHeight + labelInterval + sectionInterval
             
             let point = CGPoint(x: pointX - self.pointDiameter / 2, y: bubbltPointY + bubbleHeight / 2 - self.pointDiameter / 2)
-      
+            
             self.sections[i].point = point
             self.sections[i].bubbleRect.origin = .init(x: bubblePointX, y: bubbltPointY)
             self.sections[i].descriptionRect?.origin = .init(x: descPointX, y: descPointY)
-           
-            let titleFrame = CGRect(x: bubblePointX + 10, y: bubbltPointY + (bubbleHeight - titleLabelHeight) / 2  , width: bubbleWidth - 10, height: titleLabelHeight)
+            
+            let titleFrame = NSInsetRect(self.sections[i].bubbleRect, 10, (bubbleHeight - titleLabelHeight) / 2)
             self.updateLabel(section.titleLabel, frame: titleFrame, textColor: self.titleColor)
             
             if let label = section.descriptionLabel, let rect = self.sections[i].descriptionRect {
@@ -385,11 +387,20 @@ class TimelineView: NSView {
             
         }
         
+        if let knobLabel = self.knobLabel {
+            self.knobRect = NSRect.init(x: pointX + (self.hasBubbleArrow ? self.bubbleArrowSize.width : 0.0),
+                                        y: draggingY - self.knobHeight / 2.0,
+                                        width: self.knobWidth,
+                                        height: self.knobHeight)
+            let titleLabelRect = NSInsetRect(self.knobRect, 8, (self.knobHeight - titleLabelHeight) / 2.0)
+            self.updateLabel(knobLabel, frame: titleLabelRect, textColor: self.titleColor)
+        }
+        
     }
-  
-    private func buildTitleLabel(_ index: Int) -> NSTextField {
+
+    private func buildTitleLabel(_ value: String) -> NSTextField {
         let label = NSTextField.init()
-        label.stringValue = points[index].title
+        label.stringValue = value
         label.font = .systemFont(ofSize: 12.0)
         label.isBordered = false
         label.isEditable = false
@@ -402,8 +413,8 @@ class TimelineView: NSView {
         return label
     }
     
-    private func buildDescriptionLabel(_ index: Int) -> NSTextField? {
-        if let text = self.points[index].description {
+    private func buildDescriptionLabel(_ value: String?) -> NSTextField? {
+        if let text = value {
             let label = NSTextField.init()
             label.stringValue = text
             label.font = .systemFont(ofSize: 10.0)
@@ -419,6 +430,7 @@ class TimelineView: NSView {
         }else {
             return nil
         }
+        
     }
     
     override func draw(_ dirtyRect: NSRect) {
@@ -436,13 +448,10 @@ class TimelineView: NSView {
                 let knobPointDiameter: CGFloat = 3.0
                 self.drawPoint(NSPoint.init(x: start.x - knobPointDiameter / 2, y: start.y - knobPointDiameter / 2), diameter: knobPointDiameter, color: self.lineColor.cgColor, fill: true, lineWidth: 1.0)
                 
-                let knobWidth: CGFloat = 60
-                let knobHeight: CGFloat = 30
-                let knobRect = NSRect.init(x: start.x + (self.hasBubbleArrow ? self.bubbleArrowSize.width : 0.0),
-                                           y: start.y - knobHeight / 2.0,
-                                           width: knobWidth,
-                                           height: knobHeight)
-                self.drawDraggingKnob(knobRect, backgroundColor: self.bubbleColor, onRight: true)
+                if endY - start.y > 0, self.knobRect != .zero {
+                    self.drawDraggingKnob(self.knobRect, backgroundColor: self.bubbleColor, onRight: true)
+                }
+                
                 
                 self.sections.forEach { (section) in
                     
@@ -641,15 +650,17 @@ extension TimelineView: NSAnimationDelegate {
     }
     
     func animationShouldStart(_ animation: NSAnimation) -> Bool {
+        print(#function)
         return true
     }
     
     func animationDidEnd(_ animation: NSAnimation) {
-        print("animationDidEnd...")
+        self.refresh()
+        print(#function)
     }
     
     func animationDidStop(_ animation: NSAnimation) {
-        
+        print(#function)
     }
     
     @objc override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {

@@ -80,7 +80,9 @@
 		909D03D4236D247600EB41A4 /* DraggableTimeline */ = {
 			isa = PBXGroup;
 			children = (
-				909D03E3236D25F700EB41A4 /* SourceCodes */,
+				1A3EAA65238591AE00B205A4 /* Utilities */,
+				909B10BA237551BC00EA7B67 /* Dragging */,
+				909D03E4236D260100EB41A4 /* Timeline */,
 				909D03D5236D247600EB41A4 /* AppDelegate.swift */,
 				909D03D7236D24AF00EB41A4 /* Assets.xcassets */,
 				909D03D9236D24AF00EB41A4 /* MainMenu.xib */,
@@ -88,16 +90,6 @@
 				909D03DD236D24AF00EB41A4 /* DraggableTimeline.entitlements */,
 			);
 			path = DraggableTimeline;
-			sourceTree = "<group>";
-		};
-		909D03E3236D25F700EB41A4 /* SourceCodes */ = {
-			isa = PBXGroup;
-			children = (
-				1A3EAA65238591AE00B205A4 /* Utilities */,
-				909B10BA237551BC00EA7B67 /* Dragging */,
-				909D03E4236D260100EB41A4 /* Timeline */,
-			);
-			path = SourceCodes;
 			sourceTree = "<group>";
 		};
 		909D03E4236D260100EB41A4 /* Timeline */ = {
