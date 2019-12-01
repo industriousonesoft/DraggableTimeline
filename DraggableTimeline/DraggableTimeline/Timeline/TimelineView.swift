@@ -56,6 +56,14 @@ class TimelineView: NSView {
     private var knobWidth: CGFloat = 90
     private var knobHeight: CGFloat = 26
     
+    private lazy var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter.init()
+        formatter.dateFormat = "HH:mm a"
+        formatter.amSymbol = "AM"
+        formatter.pmSymbol = "PM"
+        return formatter
+    }()
+    
     var contentInsets: NSEdgeInsets = .init(top: 0, left: 0, bottom: 0, right: 0) {
         didSet {
 //            DispatchQueue.main.async {
@@ -66,7 +74,7 @@ class TimelineView: NSView {
     
     var lineColor: NSColor = .gray
     
-    var bubbleColor: NSColor = .gray {//.init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
+    var bubbleColor: NSColor = .clear {//.init(red: 0.75, green: 0.75, blue: 0.75, alpha: 1.0) {
         didSet {
 //            DispatchQueue.main.async {
 //                self.refresh()
@@ -338,8 +346,12 @@ class TimelineView: NSView {
         if availableHeight - TimelineView.BottomMargin >= self.contentHeightSum + TimelineView.gap {
             sectionBaseY = maxY - self.contentHeightSum - TimelineView.gap
         }
-        let minutes = ((availableHeight / maxY) * 60.0).rounded()
-        self.knobLabel?.stringValue = "In \(minutes) mins"
+        let minutes = Int(((availableHeight / maxY) * 600.0).rounded())
+        if (minutes % 10) == 0 {
+            let date = Date.init(timeIntervalSinceNow: TimeInterval(minutes * 60))
+            let str = self.dateFormatter.string(from: date)
+            self.knobLabel?.stringValue = "In \(str)"
+        }
         
         for i in (0..<self.sections.count).reversed() {
             
@@ -449,9 +461,8 @@ class TimelineView: NSView {
                 self.drawPoint(NSPoint.init(x: start.x - knobPointDiameter / 2, y: start.y - knobPointDiameter / 2), diameter: knobPointDiameter, color: self.lineColor.cgColor, fill: true, lineWidth: 1.0)
                 
                 if endY - start.y > 0, self.knobRect != .zero {
-                    self.drawDraggingKnob(self.knobRect, backgroundColor: self.bubbleColor, onRight: true)
+                    self.drawDraggingKnob(self.knobRect, backgroundColor: .gray, onRight: true)
                 }
-                
                 
                 self.sections.forEach { (section) in
                     

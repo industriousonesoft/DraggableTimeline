@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1A3EAA67238591F800B205A4 /* UserDefaults+Extend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A3EAA66238591F800B205A4 /* UserDefaults+Extend.swift */; };
+		1A4BB129238ACEC90026B529 /* MacSnifferSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4BB128238ACEC90026B529 /* MacSnifferSDK.framework */; };
+		1A4BB12A238ACEDC0026B529 /* MacSnifferSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1A4BB128238ACEC90026B529 /* MacSnifferSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		909B10BC2375528000EA7B67 /* DraggingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909B10BB2375528000EA7B67 /* DraggingView.swift */; };
 		909B10BE2375534E00EA7B67 /* DraggingTacker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909B10BD2375534E00EA7B67 /* DraggingTacker.swift */; };
 		909D03D6236D247600EB41A4 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909D03D5236D247600EB41A4 /* AppDelegate.swift */; };
@@ -15,11 +17,25 @@
 		909D03DB236D24AF00EB41A4 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 909D03D9236D24AF00EB41A4 /* MainMenu.xib */; };
 		909D03E6236D27C000EB41A4 /* TimelinePoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909D03E5236D27C000EB41A4 /* TimelinePoint.swift */; };
 		909D03E8236D293E00EB41A4 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909D03E7236D293E00EB41A4 /* TimelineView.swift */; };
-		909D03EB236D81E800EB41A4 /* FlippedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 909D03EA236D81E800EB41A4 /* FlippedView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		1A4BB124238AC73F0026B529 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1A4BB12A238ACEDC0026B529 /* MacSnifferSDK.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1A3EAA66238591F800B205A4 /* UserDefaults+Extend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UserDefaults+Extend.swift"; sourceTree = "<group>"; };
+		1A4BB128238ACEC90026B529 /* MacSnifferSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = MacSnifferSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		909B10BB2375528000EA7B67 /* DraggingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggingView.swift; sourceTree = "<group>"; };
 		909B10BD2375534E00EA7B67 /* DraggingTacker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggingTacker.swift; sourceTree = "<group>"; };
 		909D03D2236D247600EB41A4 /* DraggableTimeline.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DraggableTimeline.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,7 +46,6 @@
 		909D03DD236D24AF00EB41A4 /* DraggableTimeline.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DraggableTimeline.entitlements; sourceTree = "<group>"; };
 		909D03E5236D27C000EB41A4 /* TimelinePoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelinePoint.swift; sourceTree = "<group>"; };
 		909D03E7236D293E00EB41A4 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
-		909D03EA236D81E800EB41A4 /* FlippedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlippedView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +53,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A4BB129238ACEC90026B529 /* MacSnifferSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,6 +68,14 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
+		1A4BB125238ACDD50026B529 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1A4BB128238ACEC90026B529 /* MacSnifferSDK.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		909B10BA237551BC00EA7B67 /* Dragging */ = {
 			isa = PBXGroup;
 			children = (
@@ -64,6 +88,7 @@
 		909D03C9236D247600EB41A4 = {
 			isa = PBXGroup;
 			children = (
+				1A4BB125238ACDD50026B529 /* Frameworks */,
 				909D03D4236D247600EB41A4 /* DraggableTimeline */,
 				909D03D3236D247600EB41A4 /* Products */,
 			);
@@ -95,7 +120,6 @@
 		909D03E4236D260100EB41A4 /* Timeline */ = {
 			isa = PBXGroup;
 			children = (
-				909D03EA236D81E800EB41A4 /* FlippedView.swift */,
 				909D03E5236D27C000EB41A4 /* TimelinePoint.swift */,
 				909D03E7236D293E00EB41A4 /* TimelineView.swift */,
 			);
@@ -112,6 +136,7 @@
 				909D03CE236D247600EB41A4 /* Sources */,
 				909D03CF236D247600EB41A4 /* Frameworks */,
 				909D03D0236D247600EB41A4 /* Resources */,
+				1A4BB124238AC73F0026B529 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -134,6 +159,11 @@
 				TargetAttributes = {
 					909D03D1236D247600EB41A4 = {
 						CreatedOnToolsVersion = 11.1;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -178,7 +208,6 @@
 				909D03E6236D27C000EB41A4 /* TimelinePoint.swift in Sources */,
 				909B10BE2375534E00EA7B67 /* DraggingTacker.swift in Sources */,
 				909B10BC2375528000EA7B67 /* DraggingView.swift in Sources */,
-				909D03EB236D81E800EB41A4 /* FlippedView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,6 +257,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -246,7 +276,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -288,6 +318,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -300,7 +331,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -321,7 +352,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.industriousguy.DraggableTimeline;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -340,7 +370,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.industriousguy.DraggableTimeline;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;

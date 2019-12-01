@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import MacSnifferSDK
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -20,7 +21,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Insert code here to initialize your application
         self.addObservers()
         self.initStatusItem()
-        self.initTimelineData()
+//        self.initTimelineData()
+        self.initReminderTimeline()
         self.updateStatusBarImageView()
     }
 
@@ -87,6 +89,34 @@ extension AppDelegate {
 }
 
 extension AppDelegate {
+    
+    private func initReminderTimeline() {
+        
+        let pointColor = NSColor.white
+        let lineColor = NSColor.black
+        let timelineView = TimelineView.init(frame: .zero)
+        DraggingTacker.shared.setScreenDragTrackingView(timelineView)
+        timelineView.contentInsets = NSEdgeInsetsMake(20, 20, 20, 20)
+        
+        let dateFormatter = DateFormatter.init()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        
+        print("=> Start...\(Date.init())")
+        
+        RemindersAccessor.shared.getAllPropertiesOfReminders(in: nil, isCompleted: false) { (properties) in
+
+            print("=> Finished...\(Date.init())")
+
+            var timelinePoints: [TimelinePoint] = []
+
+            properties.forEach({ (property) in
+                let point = TimelinePoint(title: dateFormatter.string(from: property.dueDate!), description: property.name, pointColor: pointColor, lineColor: lineColor, fill: false)
+                timelinePoints.append(point)
+            })
+
+            timelineView.points = timelinePoints
+        }
+    }
     
     private func initTimelineData() {
         
